@@ -4,7 +4,7 @@ import 'screens/profile_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'screens/prize_draw_screen.dart';
 import 'screens/advisor_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/navigation.dart';
 
 void main() {
   runApp(MyApp());
@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomeScreen(),
+      home: Navigation(),
     );
   }
 }

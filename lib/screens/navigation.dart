@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import 'main_screen.dart';
-import 'transactions_screen.dart';
-import 'prize_draw_screen.dart';
-import 'advisor_screen.dart';
-import 'profile_screen.dart';
+import '../screens/main_screen.dart';
+import '../screens/transactions_screen.dart';
+import '../screens/prize_draw_screen.dart';
+import '../screens/advisor_screen.dart';
+import '../screens/profile_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class Navigation extends StatefulWidget {
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _NavigationState createState() => _NavigationState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _NavigationState extends State<Navigation> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
     MainScreen(),
     TransactionsScreen(),
-    PrizeDrawScreen(),
     AdvisorScreen(),
+    PrizeDrawScreen(),
     ProfileScreen(),
   ];
 
@@ -44,23 +44,23 @@ class _HomeScreenState extends State<HomeScreen> {
           type: BottomNavigationBarType.fixed, // Keeps labels visible
           items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home, size: 30),
+              icon: ImageIcon(AssetImage('icons/mynaui_home.png'), size: 30),
               label: "Home",
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today, size: 30), // History Icon
+              icon: ImageIcon(AssetImage('icons/gala_calendar.png'), size: 30), // Fixed path for History
               label: "History",
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.card_giftcard, size: 30), // Prize Icon
+              icon: ImageIcon(AssetImage('mynaui_home.png'), size: 30),
+              label: "", // No text for Advisor
+            ),
+            BottomNavigationBarItem(
+              icon: ImageIcon(AssetImage('lib/icons/prizes.png'), size: 30),
               label: "Prizes",
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.memory, size: 30), // AI/Advisor Icon
-              label: "Advisor",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person, size: 30), // Profile Icon
+              icon: ImageIcon(AssetImage('lib/icons/profile.png'), size: 30),
               label: "Profile",
             ),
           ],
