@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'main_screen.dart';
-import 'profile_screen.dart';
 import 'transactions_screen.dart';
 import 'prize_draw_screen.dart';
 import 'advisor_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -30,18 +30,41 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_selectedIndex], // Swap screens while keeping navigation
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: "Transactions"),
-          BottomNavigationBarItem(icon: Icon(Icons.card_giftcard), label: "Prize Draw"),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Advisor"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
+      body: _screens[_selectedIndex],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: Colors.blueAccent, width: 2)), // Blue outline
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          backgroundColor: Colors.black, // Dark theme
+          selectedItemColor: Colors.white, // White for selected items
+          unselectedItemColor: Colors.grey, // Grey for unselected items
+          type: BottomNavigationBarType.fixed, // Keeps labels visible
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home, size: 30),
+              label: "Home",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today, size: 30), // History Icon
+              label: "History",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.card_giftcard, size: 30), // Prize Icon
+              label: "Prizes",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.memory, size: 30), // AI/Advisor Icon
+              label: "Advisor",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person, size: 30), // Profile Icon
+              label: "Profile",
+            ),
+          ],
+        ),
       ),
     );
   }
