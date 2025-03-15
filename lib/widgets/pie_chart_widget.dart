@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'package:technik/db/db.dart'; // Adjust the import path as needed
+import 'dart:async';
 
 class PieChartWidget extends StatefulWidget {
   PieChartWidget({Key? key}) : super(key: key);
@@ -11,13 +12,12 @@ class PieChartWidget extends StatefulWidget {
 
 class _PieChartWidgetState extends State<PieChartWidget> {
   bool animate = false;
-  late List<PieChartSectionData> finalSections;
+  List<PieChartSectionData> finalSections = [];
 
   @override
   void initState() {
     super.initState();
-    // Generate final data with fixed colors for each category.
-    finalSections = _generateFinalSections();
+    fetchChartData();
     // Trigger the animation after a short delay.
     Future.delayed(Duration(milliseconds: 300), () {
       setState(() {
@@ -26,34 +26,58 @@ class _PieChartWidgetState extends State<PieChartWidget> {
     });
   }
 
-  List<PieChartSectionData> _generateFinalSections() {
-    final random = Random();
-    // Define the categories and fixed colors for each category.
-    final categories = ['Food', 'Transport', 'Entertainment', 'Bills', 'Others'];
-    final List<Color> categoryColors = [
+  /// Fetch transactions from the database, group them by description,
+  /// and compute the total amount for each category.
+  Future<void> fetchChartData() async {
+    final List<Map<String, dynamic>> txMaps = await TransactionDB.getTransactions();
+    // Group transactions by description.
+    Map<String, double> categoryTotals = {};
+    for (var tx in txMaps) {
+      String desc = tx['description'];
+      double amount = (tx['amount'] is int)
+          ? (tx['amount'] as int).toDouble()
+          : tx['amount'];
+      categoryTotals[desc] = (categoryTotals[desc] ?? 0) + amount;
+    }
+
+    // Predefined fixed colors (cycle through if there are more categories)
+    final List<Color> fixedColors = [
       Colors.red,
       Colors.blue,
       Colors.green,
       Colors.orange,
       Colors.purple,
+      Colors.cyan,
+      Colors.amber,
+      Colors.indigo,
     ];
-    return List.generate(categories.length, (index) {
-      final value = random.nextDouble() * 100 + 10;
-      return PieChartSectionData(
-        color: categoryColors[index],
-        value: value,
-        title: '${categories[index]}\n${value.toStringAsFixed(0)}',
-        radius: 50,
-        titleStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+
+    // Create a PieChartSectionData list from the grouped data.
+    List<PieChartSectionData> sections = [];
+    int colorIndex = 0;
+    categoryTotals.forEach((category, total) {
+      sections.add(
+        PieChartSectionData(
+          color: fixedColors[colorIndex % fixedColors.length],
+          value: total,
+          title: '$category\n${total.toStringAsFixed(0)}',
+          radius: 50,
+          titleStyle: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       );
+      colorIndex++;
+    });
+
+    setState(() {
+      finalSections = sections;
     });
   }
 
-  /// If animation hasn't started, show sections with 0 value; otherwise, display final values.
+  /// If animation hasn't started, return sections with 0 values; otherwise, return final sections.
   List<PieChartSectionData> _generateDisplaySections() {
     if (!animate) {
       return finalSections.map((section) {
