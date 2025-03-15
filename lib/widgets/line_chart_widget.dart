@@ -1,5 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'dart:math';
+import '../db/db.dart'; // Import your database helper
 
 class LineChartWidget extends StatefulWidget {
   @override
@@ -8,30 +11,82 @@ class LineChartWidget extends StatefulWidget {
 
 class _LineChartWidgetState extends State<LineChartWidget> {
   bool animate = false; // Controls animation start
+  List<FlSpot> finalSpots = []; // Will hold final data from DB
 
   @override
   void initState() {
     super.initState();
+    fetchChartData();
+    // Trigger the animation after a short delay
     Future.delayed(Duration(milliseconds: 300), () {
       setState(() {
-        animate = true; // Triggers animation
+        animate = true;
       });
+    });
+  }
+
+  /// Fetches transactions from the database, groups them by month, and computes totals.
+  Future<void> fetchChartData() async {
+    // Get transactions from DB (assumes date is stored as "YYYY-MM-DD HH:mm:ss")
+    final List<Map<String, dynamic>> txMaps = await TransactionDB.getTransactions();
+    // Create a list for monthly totals for 12 months (index 0 = Jan, index 11 = Dec)
+    List<double> monthlyTotals = List.filled(12, 0.0);
+
+    for (var txMap in txMaps) {
+      try {
+        DateTime date = DateFormat('yyyy-MM-dd HH:mm:ss').parse(txMap['date']);
+        int monthIndex = date.month - 1; // Month 1 (Jan) becomes index 0
+        double amount = (txMap['amount'] is int)
+            ? (txMap['amount'] as int).toDouble()
+            : txMap['amount'];
+        monthlyTotals[monthIndex] += amount;
+      } catch (e) {
+        print('Error parsing transaction: $e');
+      }
+    }
+
+    // Create chart spots for each month based on the computed totals.
+    List<FlSpot> spots = List.generate(12, (index) {
+      return FlSpot(index.toDouble(), monthlyTotals[index]);
+    });
+
+    setState(() {
+      finalSpots = spots;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    // Use zero-value spots if not animating yet.
+    List<FlSpot> displaySpots = (animate && finalSpots.isNotEmpty)
+        ? finalSpots
+        : List.generate(12, (index) => FlSpot(index.toDouble(), 0));
+
+    // Optionally compute dynamic minY and maxY from the data (or use fixed values if preferred).
+    double computedMinY = 500;
+    double computedMaxY = 1200;
+    if (finalSpots.isNotEmpty) {
+      computedMinY = finalSpots.map((s) => s.y).reduce(min);
+      computedMaxY = finalSpots.map((s) => s.y).reduce(max);
+      // Add a little margin to the computed values.
+      double margin = (computedMaxY - computedMinY) * 0.1;
+      computedMinY = computedMinY - margin;
+      computedMaxY = computedMaxY + margin;
+      // Ensure minY is not less than zero.
+      computedMinY = computedMinY < 0 ? 0 : computedMinY;
+    }
+
     return LineChart(
       LineChartData(
-        gridData: FlGridData(show: false), // Hide grid lines
+        gridData: FlGridData(show: false),
         titlesData: FlTitlesData(
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 55, // Ensures space for labels
+              reservedSize: 55,
               getTitlesWidget: (value, meta) {
-                // Ensure fixed Y-axis labels for every $100 step
-                if (value % 100 == 0 && value >= 500 && value <= 1100) {
+                // Display labels every $100 step
+                if (value % 100 == 0) {
                   return Padding(
                     padding: EdgeInsets.only(right: 8),
                     child: Text(
@@ -41,7 +96,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
                     ),
                   );
                 }
-                return Container(); // Hide unwanted labels
+                return Container();
               },
             ),
           ),
@@ -49,7 +104,20 @@ class _LineChartWidgetState extends State<LineChartWidget> {
             sideTitles: SideTitles(
               showTitles: true,
               getTitlesWidget: (value, meta) {
-                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const months = [
+                  'Jan',
+                  'Feb',
+                  'Mar',
+                  'Apr',
+                  'May',
+                  'Jun',
+                  'Jul',
+                  'Aug',
+                  'Sep',
+                  'Oct',
+                  'Nov',
+                  'Dec'
+                ];
                 return Padding(
                   padding: EdgeInsets.only(top: 5),
                   child: Text(
@@ -58,14 +126,14 @@ class _LineChartWidgetState extends State<LineChartWidget> {
                   ),
                 );
               },
-              interval: 1, // Show every month
+              interval: 1,
             ),
           ),
           rightTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: false), // Hide right Y-axis labels
+            sideTitles: SideTitles(showTitles: false),
           ),
           topTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: false), // Hide top X-axis labels
+            sideTitles: SideTitles(showTitles: false),
           ),
         ),
         borderData: FlBorderData(
@@ -74,20 +142,7 @@ class _LineChartWidgetState extends State<LineChartWidget> {
         ),
         lineBarsData: [
           LineChartBarData(
-            spots: [
-              FlSpot(0, animate ? 500 : 0),  
-              FlSpot(1, animate ? 750 : 0),  
-              FlSpot(2, animate ? 600 : 0),  
-              FlSpot(3, animate ? 820 : 0),  
-              FlSpot(4, animate ? 700 : 0),  
-              FlSpot(5, animate ? 900 : 0),  
-              FlSpot(6, animate ? 1000 : 0), 
-              FlSpot(7, animate ? 950 : 0),  
-              FlSpot(8, animate ? 870 : 0),  
-              FlSpot(9, animate ? 980 : 0),  
-              FlSpot(10, animate ? 1100 : 0), 
-              FlSpot(11, animate ? 1050 : 0), 
-            ],
+            spots: displaySpots,
             isCurved: true,
             color: Color(0xFF50c878), // Emerald Green
             barWidth: 3,
@@ -95,15 +150,15 @@ class _LineChartWidgetState extends State<LineChartWidget> {
             belowBarData: BarAreaData(show: false),
           ),
         ],
-        lineTouchData: LineTouchData(enabled: false), // Disable touch effect
+        lineTouchData: LineTouchData(enabled: false),
         minX: 0,
         maxX: 11,
-        minY: 500, // Prevents Y-axis auto-scaling
-        maxY: 1200,
-        clipData: FlClipData.all(), // Ensures the animation stays within bounds
+        minY: computedMinY,
+        maxY: computedMaxY,
+        clipData: FlClipData.all(),
       ),
-      duration: Duration(seconds: 1), // Animation duration
-      curve: Curves.easeInOut, // Smooth animation
+      duration: Duration(seconds: 1),
+      curve: Curves.easeInOut,
     );
   }
 }
