@@ -3,7 +3,7 @@ import 'package:technik/globals.dart';
 import '../widgets/dynamic_widget.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../widgets/line_chart_widget.dart';
-import '../widgets/pie_chart_widget.dart'; // New pie chart widget file
+import '../widgets/pie_chart_widget.dart';
 import '../widgets/header_widget.dart';
 import '../widgets/add_transaction_dialog.dart'; // Import the Add Transaction dialog
 
@@ -14,9 +14,15 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   final PageController _pageController = PageController();
+  bool showPieChartAnimation = false;
 
   @override
   Widget build(BuildContext context) {
+    // Calculate a widget width matching the TransactionsScreen style.
+    // Assuming 8 pixels padding on each side (total 16 pixels).
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double widgetWidth = screenWidth - 16;
+
     return Scaffold(
       backgroundColor: Color(0xFF2c2c2e),
       body: SafeArea(
@@ -29,7 +35,7 @@ class _MainScreenState extends State<MainScreen> {
               SizedBox(height: 20),
               // Overview charts section
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
                   "Here is your overview",
                   style: TextStyle(
@@ -41,14 +47,23 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ),
               SizedBox(height: 10),
+              // Charts PageView with consistent widget width.
               Container(
+                width: widgetWidth,
                 height: 330,
                 child: PageView(
                   controller: _pageController,
+                  onPageChanged: (index) {
+                    if (index == 1) {
+                      setState(() {
+                        showPieChartAnimation = true;
+                      });
+                    }
+                  },
                   children: [
                     // Line Chart Page
                     DynamicWidget(
-                      width: 390,
+                      width: widgetWidth,
                       height: 330,
                       cornerRadius: 45,
                       child: Column(
@@ -73,9 +88,9 @@ class _MainScreenState extends State<MainScreen> {
                         ],
                       ),
                     ),
-                    // Pie Chart Page (renders random data with animation)
+                    // Pie Chart Page
                     DynamicWidget(
-                      width: 390,
+                      width: widgetWidth,
                       height: 330,
                       cornerRadius: 45,
                       child: Column(
@@ -117,7 +132,7 @@ class _MainScreenState extends State<MainScreen> {
               SizedBox(height: 20),
               // Add Transaction Button
               DynamicWidget(
-                width: 365,
+                width: widgetWidth,
                 height: 100,
                 cornerRadius: 45,
                 color: Color(0xFF4CD964),
@@ -137,7 +152,7 @@ class _MainScreenState extends State<MainScreen> {
               SizedBox(height: 20),
               // Additional static widget (New Widget Below)
               DynamicWidget(
-                width: 390,
+                width: widgetWidth,
                 height: 150,
                 cornerRadius: 45,
                 child: Center(
