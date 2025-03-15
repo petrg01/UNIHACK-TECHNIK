@@ -9,6 +9,7 @@ import 'package:technik/data/notification_preferences_data.dart';
 import 'package:technik/widgets/subscription_list.dart';
 import 'package:technik/data/subscription_data.dart';
 import 'package:technik/widgets/add_goal_form.dart';
+import '../widgets/header_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -25,6 +26,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // Initialize with sample goals
     _goals = GoalsData.getSampleGoals();
   }
+  
+  final String userName = "John Johnson";
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
             children: [
+              //HeaderWidget(userName: userName),
               SizedBox(height: 60),
               // Profile Picture
               Container(
@@ -62,7 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SizedBox(height: 20),
               // User Name
               Text(
-                "John Johnson",
+                userName,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 28,

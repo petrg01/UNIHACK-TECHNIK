@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:technik/globals.dart';
+import 'package:technik/widgets/header_widget.dart';
 import '../db/db.dart';
 import '../models/transaction.dart';
 import 'package:intl/intl.dart';
@@ -53,83 +55,83 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return transactions.fold(0.0, (sum, tx) => sum + tx.amount);
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF2c2c2e),
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text('Transactions', style: TextStyle(color: Colors.white)),
-      ),
-      body: ListView(
-        padding: EdgeInsets.all(8),
-        children: groupedTransactions.entries.map((entry) {
-          String date = entry.key;
-          List<Transaction> transactions = entry.value;
-          double total = _calculateTotal(transactions);
+      body: Column(
+        children: [
+          HeaderWidget(userName: userName), // ✅ Add the header with the global user name
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.all(8),
+              children: groupedTransactions.entries.map((entry) {
+                String date = entry.key;
+                List<Transaction> transactions = entry.value;
+                double total = _calculateTotal(transactions);
 
-          // Show only the first 3 transactions initially
-          List<Transaction> displayedTransactions = transactions.take(3).toList();
+                // Show only the first 3 transactions initially
+                List<Transaction> displayedTransactions = transactions.take(3).toList();
 
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: 5),
-            child: GestureDetector(
-              onTap: () => _showFullTransactionList(context, date, transactions),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFF3e3d3d),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Date header
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Text(
-                        date,
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                return Padding(
+                  padding: EdgeInsets.symmetric(vertical: 5),
+                  child: GestureDetector(
+                    onTap: () => _showFullTransactionList(context, date, transactions),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Color(0xFF3e3d3d),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ),
-                    Divider(color: Colors.white54, height: 1),
-                    // Transactions List (limited to 3)
-                    ...displayedTransactions.map((tx) => _buildTransactionRow(tx)).toList(),
-                    Divider(color: Colors.white54, height: 1),
-                    // Total
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Tap to view more",
-                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Text(
+                              date,
+                              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
                           ),
-                          Row(
-                            children: [
-                              Text(
-                                "Total: ",
-                                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                "${total == 0 ? '' : (total > 0 ? '+' : '')}${total.toStringAsFixed(2)}\$",
-                                style: TextStyle(
-                                  color: total > 0 ? Colors.green : (total < 0 ? Colors.red : Colors.white),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                          Divider(color: Colors.white54, height: 1),
+                          ...displayedTransactions.map((tx) => _buildTransactionRow(tx)).toList(),
+                          Divider(color: Colors.white54, height: 1),
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Tap to view more",
+                                  style: TextStyle(color: Colors.grey, fontSize: 14),
                                 ),
-                              ),
-                            ],
+                                Row(
+                                  children: [
+                                    Text(
+                                      "Total: ",
+                                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      "${total == 0 ? '' : (total > 0 ? '+' : '')}${total.toStringAsFixed(2)}\$",
+                                      style: TextStyle(
+                                        color: total > 0 ? Colors.green : (total < 0 ? Colors.red : Colors.white),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              }).toList(),
             ),
-          );
-        }).toList(),
+          ),
+        ],
       ),
     );
   }
