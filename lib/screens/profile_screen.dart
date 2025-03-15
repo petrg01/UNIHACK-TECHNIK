@@ -6,6 +6,8 @@ import 'package:technik/widgets/goals_list.dart';
 import 'package:technik/data/goals_data.dart';
 import 'package:technik/widgets/notification_preferences_list.dart';
 import 'package:technik/data/notification_preferences_data.dart';
+import 'package:technik/widgets/subscription_list.dart';
+import 'package:technik/data/subscription_data.dart';
 
 class ProfileScreen extends StatelessWidget {
   @override
@@ -59,7 +61,7 @@ class ProfileScreen extends StatelessWidget {
                   _buildActionButton(
                     icon: Icons.menu_book_outlined,
                     label: "Subscriptions",
-                    onTap: () {},
+                    onTap: () => _showSubscriptionsPopup(context),
                   ),
                   _buildActionButton(
                     icon: Icons.notifications_none,
@@ -127,6 +129,86 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+  
+  void _showSubscriptionsPopup(BuildContext context) {
+    // Get sample subscriptions data
+    final subscriptions = SubscriptionData.getSampleSubscriptions();
+    
+    // Local variable to track changes
+    List<Subscription> updatedSubscriptions = List.from(subscriptions);
+
+    // Show the custom popup with subscriptions list
+    CustomPopup.show(
+      context: context,
+      title: "Your Subscriptions",
+      content: SubscriptionList(
+        subscriptions: updatedSubscriptions,
+        onSubscriptionTap: (subscription) {
+          // Here you could navigate to a subscription details screen
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Subscription details: ${subscription.name}"),
+              backgroundColor: subscription.color ?? Color(0xFF4CD964),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+        onSubscriptionToggle: (subscription, isActive) {
+          // Update the toggled subscription status
+          final index = updatedSubscriptions.indexOf(subscription);
+          if (index != -1) {
+            updatedSubscriptions[index] = Subscription(
+              name: subscription.name,
+              description: subscription.description,
+              price: subscription.price,
+              period: subscription.period,
+              renewalDate: subscription.renewalDate,
+              isActive: isActive,
+              color: subscription.color,
+            );
+            // Note: In a real app, you would persist this change
+          }
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            // Show a message that subscriptions settings are saved
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Subscription preferences saved"),
+                backgroundColor: Color(0xFF4CD964),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          child: Text(
+            "Save",
+            style: TextStyle(color: Color(0xFF4CD964)),
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            // Here you could navigate to a 'Add Subscription' screen
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Add subscription feature coming soon!"),
+                backgroundColor: Color(0xFF4CD964),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          child: Text(
+            "Add New",
+            style: TextStyle(color: Color(0xFF4CD964)),
+          ),
+        ),
+      ],
     );
   }
 
