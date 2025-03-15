@@ -55,7 +55,6 @@ dev_dependencies:
 flutter:
   assets:
     - lib/icons/
-    - lib/icons/gala_calendar.svg
     - .env
 
 
