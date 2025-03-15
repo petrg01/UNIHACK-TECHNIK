@@ -1,7 +1,24 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-class LineChartWidget extends StatelessWidget {
+class LineChartWidget extends StatefulWidget {
+  @override
+  _LineChartWidgetState createState() => _LineChartWidgetState();
+}
+
+class _LineChartWidgetState extends State<LineChartWidget> {
+  bool animate = false; // Controls animation start
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(milliseconds: 300), () {
+      setState(() {
+        animate = true; // Triggers animation
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return LineChart(
@@ -11,9 +28,9 @@ class LineChartWidget extends StatelessWidget {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 55, // Enough space for 4-digit numbers
+              reservedSize: 55, // Ensures space for labels
               getTitlesWidget: (value, meta) {
-                // Define labels explicitly to avoid missing numbers
+                // Ensure fixed Y-axis labels for every $100 step
                 if (value % 100 == 0 && value >= 500 && value <= 1100) {
                   return Padding(
                     padding: EdgeInsets.only(right: 8),
@@ -24,7 +41,7 @@ class LineChartWidget extends StatelessWidget {
                     ),
                   );
                 }
-                return Container(); // Hide other labels
+                return Container(); // Hide unwanted labels
               },
             ),
           ),
@@ -58,18 +75,18 @@ class LineChartWidget extends StatelessWidget {
         lineBarsData: [
           LineChartBarData(
             spots: [
-              FlSpot(0, 500),  // January
-              FlSpot(1, 750),  // February
-              FlSpot(2, 600),  // March
-              FlSpot(3, 820),  // April
-              FlSpot(4, 700),  // May
-              FlSpot(5, 900),  // June
-              FlSpot(6, 1000), // July
-              FlSpot(7, 950),  // August
-              FlSpot(8, 870),  // September
-              FlSpot(9, 980),  // October
-              FlSpot(10, 1100), // November
-              FlSpot(11, 1050), // December
+              FlSpot(0, animate ? 500 : 0),  
+              FlSpot(1, animate ? 750 : 0),  
+              FlSpot(2, animate ? 600 : 0),  
+              FlSpot(3, animate ? 820 : 0),  
+              FlSpot(4, animate ? 700 : 0),  
+              FlSpot(5, animate ? 900 : 0),  
+              FlSpot(6, animate ? 1000 : 0), 
+              FlSpot(7, animate ? 950 : 0),  
+              FlSpot(8, animate ? 870 : 0),  
+              FlSpot(9, animate ? 980 : 0),  
+              FlSpot(10, animate ? 1100 : 0), 
+              FlSpot(11, animate ? 1050 : 0), 
             ],
             isCurved: true,
             color: Color(0xFF50c878), // Emerald Green
@@ -78,7 +95,15 @@ class LineChartWidget extends StatelessWidget {
             belowBarData: BarAreaData(show: false),
           ),
         ],
+        lineTouchData: LineTouchData(enabled: false), // Disable touch effect
+        minX: 0,
+        maxX: 11,
+        minY: 500, // Prevents Y-axis auto-scaling
+        maxY: 1200,
+        clipData: FlClipData.all(), // Ensures the animation stays within bounds
       ),
+      duration: Duration(seconds: 1), // Animation duration
+      curve: Curves.easeInOut, // Smooth animation
     );
   }
 }
