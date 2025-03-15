@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/main_screen.dart';
 import '../screens/transactions_screen.dart';
-import 'prize_draw_screen.dart';
+import '../screens/prize_draw_screen.dart';
 import '../screens/advisor_screen.dart';
 import '../screens/profile_screen.dart';
 
