@@ -99,11 +99,17 @@ class MainScreen extends StatelessWidget {
             ),
           ),
           actions: [
-            _buildDialogButton(context, "Cancel", Colors.grey, () => Navigator.of(context).pop()),
-            _buildDialogButton(context, "Save", Colors.blue, () async {
+            _buildDialogButton(context, "Cancel", Colors.white70, () => Navigator.of(context).pop()),
+            _buildDialogButton(context, "Save", Color(0xFF4CD964), () async {
               double? amount = double.tryParse(amountController.text);
               if (amount == null) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Invalid amount!")));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Invalid amount!"),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  )
+                );
                 return;
               }
 
@@ -116,7 +122,12 @@ class MainScreen extends StatelessWidget {
               await TransactionDB.insertTransaction(newTx.toMap());
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Transaction Added!"), duration: Duration(seconds: 2)),
+                SnackBar(
+                  content: Text("Transaction Added!"),
+                  backgroundColor: Color(0xFF4CD964),
+                  behavior: SnackBarBehavior.floating,
+                  duration: Duration(seconds: 2)
+                ),
               );
             }),
           ],
@@ -175,7 +186,7 @@ class MainScreen extends StatelessWidget {
           width: 365,
           cornerRadius: 45,
           height: 100,
-          color: Color(0xFF50C878),
+          color: Color(0xFF4CD964),
           onTap: () => _showAddTransactionDialog(context),
           child: Center(
             child: Text(
