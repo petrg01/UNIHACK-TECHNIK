@@ -241,29 +241,44 @@ Future<bool?> _confirmDelete(BuildContext context, Transaction tx) {
         ),
         content: Container(
           width: double.maxFinite,
-          height: MediaQuery.of(context).size.height * 0.6, // Prevents overflow
+          height: MediaQuery.of(context).size.height * 0.6,
           child: ListView.builder(
             itemCount: transactions.length,
             itemBuilder: (context, index) {
               final tx = transactions[index];
 
               return Dismissible(
-                key: Key(tx.id.toString()), // Unique identifier
-                direction: DismissDirection.endToStart, // Swipe left to delete
+                key: Key(tx.id.toString()),
                 background: Container(
-                  color: Colors.red,
+                  alignment: Alignment.centerLeft,
                   padding: EdgeInsets.symmetric(horizontal: 20),
+                  color: Colors.blue,
+                  child: Icon(Icons.edit, color: Colors.white),
+                ),
+                secondaryBackground: Container(
                   alignment: Alignment.centerRight,
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  color: Colors.red,
                   child: Icon(Icons.delete, color: Colors.white),
                 ),
+                direction: DismissDirection.horizontal,
                 confirmDismiss: (direction) async {
-                  return await _confirmDelete(context, tx);
+                  if (direction == DismissDirection.endToStart) {
+                    return await _confirmDelete(context, tx);
+                  } else if (direction == DismissDirection.startToEnd) {
+                    _showEditDialog(context, tx);
+                    return false; // Prevent swipe dismissal for edit
+                  }
+                  return false;
                 },
-                onDismissed: (direction) {
-                  _deleteTransaction(tx);
-                  transactions.removeAt(index); // Remove from UI
-                },
-                child: _buildTransactionRow(tx),
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF3e3d3d), // Match pop-up background
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: _buildTransactionRow(tx),
+                ),
               );
             },
           ),
@@ -278,5 +293,101 @@ Future<bool?> _confirmDelete(BuildContext context, Transaction tx) {
     },
   );
 }
+
+void _showEditDialog(BuildContext context, Transaction tx) {
+  TextEditingController descController = TextEditingController(text: tx.description);
+  TextEditingController amountController = TextEditingController(text: tx.amount.toStringAsFixed(2));
+  DateTime selectedDate = DateTime.parse(tx.date);
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Color(0xFF3e3d3d),
+        title: Text("Edit Transaction", style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Date Picker
+            TextButton(
+              onPressed: () async {
+                DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: selectedDate,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                );
+                if (pickedDate != null) {
+                  selectedDate = pickedDate;
+                }
+              },
+              child: Text(
+                "Date: ${DateFormat('yyyy-MM-dd').format(selectedDate)}",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+
+            // Time Picker
+            TextButton(
+              onPressed: () async {
+                TimeOfDay? pickedTime = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay.fromDateTime(selectedDate),
+                );
+                if (pickedTime != null) {
+                  selectedDate = DateTime(
+                    selectedDate.year,
+                    selectedDate.month,
+                    selectedDate.day,
+                    pickedTime.hour,
+                    pickedTime.minute,
+                  );
+                }
+              },
+              child: Text(
+                "Time: ${DateFormat('HH:mm').format(selectedDate)}",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+
+            // Description
+            TextField(
+              controller: descController,
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(labelText: "Description", labelStyle: TextStyle(color: Colors.grey)),
+            ),
+
+            // Amount
+            TextField(
+              controller: amountController,
+              keyboardType: TextInputType.number,
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(labelText: "Amount", labelStyle: TextStyle(color: Colors.grey)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text("Cancel", style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () async {
+              await TransactionDB.updateTransaction(tx.id!, {
+                'date': DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDate),
+                'description': descController.text,
+                'amount': double.tryParse(amountController.text) ?? tx.amount,
+              });
+              _loadTransactions(); // Refresh UI
+              Navigator.of(context).pop();
+            },
+            child: Text("Save", style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
 }

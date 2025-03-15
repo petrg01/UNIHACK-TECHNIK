@@ -13,6 +13,7 @@ class Transaction {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'date': date,
       'description': description,
       'amount': amount,

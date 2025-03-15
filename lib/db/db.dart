@@ -16,7 +16,7 @@ class TransactionDB {
       await db.execute('''
         CREATE TABLE transactions (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          date TEXT,
+          date TEXT,  -- Stores date & time in "YYYY-MM-DD HH:mm:ss"
           description TEXT,
           amount REAL
         )
@@ -37,5 +37,10 @@ class TransactionDB {
   static Future<void> deleteTransaction(int id) async {
     final db = await database;
     await db.delete('transactions', where: "id = ?", whereArgs: [id]);
+  }
+
+  static Future<void> updateTransaction(int id, Map<String, dynamic> updatedTransaction) async {
+    final db = await database;
+    await db.update('transactions', updatedTransaction, where: "id = ?", whereArgs: [id]);
   }
 }
