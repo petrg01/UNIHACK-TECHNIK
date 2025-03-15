@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:technik/globals.dart';
 import 'package:technik/widgets/custom_popup.dart';
 import 'package:technik/widgets/friends_list.dart';
 import 'package:technik/data/friends_data.dart';
@@ -27,7 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _goals = GoalsData.getSampleGoals();
   }
   
-  final String userName = "John Johnson";
+  //final String userName = "John Johnson";
 
   @override
   Widget build(BuildContext context) {

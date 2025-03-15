@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:technik/globals.dart';
 import '../widgets/dynamic_widget.dart';
 import '../db/db.dart';
 import '../models/transaction.dart';
 import 'package:flutter/cupertino.dart';
+import '../widgets/header_widget.dart';
 
 class MainScreen extends StatelessWidget {
   Future<void> _showAddTransactionDialog(BuildContext context) async {
@@ -178,25 +180,43 @@ class MainScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFF2c2c2e),
-      body: Center(
-        child: DynamicWidget(
-          width: 365,
-          cornerRadius: 45,
-          height: 100,
-          color: Color(0xFF4CD964),
-          onTap: () => _showAddTransactionDialog(context),
-          child: Center(
-            child: Text(
-              "Add Transaction",
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: const Color(0xFF2c2c2e),
+    body: SafeArea(
+      top: false,
+      child: Column(
+        children: [
+          // 1) Add your custom header at the top:
+          HeaderWidget(userName: userName), 
+          // You can pass in any string you like, or fetch it dynamically.
+
+          // 2) The rest of your page content goes here:
+          Expanded(
+            child: Center(
+              child: DynamicWidget(
+                width: 365,
+                cornerRadius: 45,
+                height: 100,
+                color: const Color(0xFF4CD964),
+                onTap: () => _showAddTransactionDialog(context),
+                child: const Center(
+                  child: Text(
+                    "Add Transaction",
+                    style: TextStyle(
+                      color: Colors.white, 
+                      fontSize: 20, 
+                      fontWeight: FontWeight.bold
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

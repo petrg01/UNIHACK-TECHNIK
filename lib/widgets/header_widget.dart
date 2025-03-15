@@ -3,29 +3,29 @@ import 'package:flutter/material.dart';
 class HeaderWidget extends StatelessWidget {
   final String userName;
 
-  const HeaderWidget({super.key, required this.userName});
+  const HeaderWidget({Key? key, required this.userName}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.black, // Header background color
+     
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 10),
+      decoration: const BoxDecoration(
+        color: Colors.black, 
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Logo
           Image.asset(
-            'lib/icons/logo.png', // Update with the correct path to your logo
-            height: 50,
+            'lib/icons/logo.png', 
+            height: 57,
+            width: 56,
           ),
 
-          // Greeting
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
+              const Text(
                 "Good Afternoon,",
                 style: TextStyle(
                   color: Colors.white,
@@ -34,8 +34,8 @@ class HeaderWidget extends StatelessWidget {
                 ),
               ),
               Text(
-                userName, // Dynamically passed name
-                style: TextStyle(
+                userName, 
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
