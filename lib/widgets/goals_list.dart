@@ -25,11 +25,13 @@ class Goal {
 class GoalsList extends StatelessWidget {
   final List<Goal> goals;
   final Function(Goal)? onGoalTap;
+  final Function(Goal)? onGoalRemoved;
 
   const GoalsList({
     Key? key,
     required this.goals,
     this.onGoalTap,
+    this.onGoalRemoved,
   }) : super(key: key);
 
   @override
@@ -48,7 +50,67 @@ class GoalsList extends StatelessWidget {
     }
 
     return Column(
-      children: goals.map((goal) => _buildGoalItem(goal, context)).toList(),
+      children: goals.map((goal) => _buildDismissibleGoalItem(goal, context)).toList(),
+    );
+  }
+
+  Widget _buildDismissibleGoalItem(Goal goal, BuildContext context) {
+    return Dismissible(
+      key: Key(goal.title), // Ideally use a unique ID for each goal
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: 20.0),
+        margin: EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          Icons.delete,
+          color: Colors.white,
+        ),
+      ),
+      onDismissed: (direction) {
+        if (onGoalRemoved != null) {
+          onGoalRemoved!(goal);
+        }
+      },
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Color(0xFF3c3c3e),
+              title: Text(
+                "Delete Goal",
+                style: TextStyle(color: Colors.white),
+              ),
+              content: Text(
+                "Are you sure you want to delete this goal?",
+                style: TextStyle(color: Colors.white70),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(
+                    "Delete",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: _buildGoalItem(goal, context),
     );
   }
 

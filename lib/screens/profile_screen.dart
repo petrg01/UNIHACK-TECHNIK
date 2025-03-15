@@ -322,6 +322,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
         },
+        onGoalRemoved: (goal) {
+          // Remove the goal from the list
+          setState(() {
+            _goals.remove(goal);
+          });
+          
+          // Show a snackbar to confirm deletion
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Goal '${goal.title}' removed"),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(
+                label: 'UNDO',
+                textColor: Colors.white,
+                onPressed: () {
+                  // Add the goal back if user taps undo
+                  setState(() {
+                    _goals.add(goal);
+                    // Sort goals to maintain original order (optional)
+                    // _goals.sort((a, b) => a.title.compareTo(b.title));
+                  });
+                  
+                  // Show confirmation
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Goal '${goal.title}' restored"),
+                      backgroundColor: goal.categoryColor ?? Color(0xFF4CD964),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        },
       ),
       actions: [
         TextButton(
