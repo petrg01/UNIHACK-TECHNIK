@@ -1,52 +1,49 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 class PieChartWidget extends StatefulWidget {
-  final bool animate;
-
-  const PieChartWidget({Key? key, required this.animate}) : super(key: key);
+  PieChartWidget({Key? key}) : super(key: key);
 
   @override
   _PieChartWidgetState createState() => _PieChartWidgetState();
 }
 
 class _PieChartWidgetState extends State<PieChartWidget> {
+  bool animate = false;
+  late List<PieChartSectionData> finalSections;
+
   @override
-  Widget build(BuildContext context) {
-    return PieChart(
-      PieChartData(
-        sectionsSpace: 2, // Space between slices
-        centerSpaceRadius: 40, // Space in center for a cleaner look
-        borderData: FlBorderData(show: false), // Hide border
-        sections: _generatePieSections(), // Call function to generate sections
-      ),
-    );
+  void initState() {
+    super.initState();
+    // Generate final data with fixed colors for each category.
+    finalSections = _generateFinalSections();
+    // Trigger the animation after a short delay.
+    Future.delayed(Duration(milliseconds: 300), () {
+      setState(() {
+        animate = true;
+      });
+    });
   }
 
-  List<PieChartSectionData> _generatePieSections() {
-    final data = {
-      'Food': 300.0,
-      'Transport': 150.0,
-      'Entertainment': 200.0,
-      'Shopping': 250.0,
-      'Bills': 400.0,
-    };
-
-    final colors = [
-      Color(0xFFFF6384), // Red - Food
-      Color(0xFF36A2EB), // Blue - Transport
-      Color(0xFFFFCE56), // Yellow - Entertainment
-      Color(0xFF4BC0C0), // Green - Shopping
-      Color(0xFF9966FF), // Purple - Bills
+  List<PieChartSectionData> _generateFinalSections() {
+    final random = Random();
+    // Define the categories and fixed colors for each category.
+    final categories = ['Food', 'Transport', 'Entertainment', 'Bills', 'Others'];
+    final List<Color> categoryColors = [
+      Colors.red,
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
     ];
-
-    return List.generate(data.length, (index) {
-      final entry = data.entries.elementAt(index);
+    return List.generate(categories.length, (index) {
+      final value = random.nextDouble() * 100 + 10;
       return PieChartSectionData(
-        color: colors[index],
-        value: widget.animate ? entry.value : 0, // Animates from 0 to actual value
-        title: widget.animate ? '${entry.key}\n\$${entry.value.toInt()}' : '', // Show label after animation
-        radius: widget.animate ? 80 : 10, // Expands smoothly
+        color: categoryColors[index],
+        value: value,
+        title: '${categories[index]}\n${value.toStringAsFixed(0)}',
+        radius: 50,
         titleStyle: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
@@ -54,5 +51,34 @@ class _PieChartWidgetState extends State<PieChartWidget> {
         ),
       );
     });
+  }
+
+  /// If animation hasn't started, show sections with 0 value; otherwise, display final values.
+  List<PieChartSectionData> _generateDisplaySections() {
+    if (!animate) {
+      return finalSections.map((section) {
+        return PieChartSectionData(
+          color: section.color,
+          value: 0,
+          title: '',
+          radius: section.radius,
+        );
+      }).toList();
+    } else {
+      return finalSections;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PieChart(
+      PieChartData(
+        sections: _generateDisplaySections(),
+        centerSpaceRadius: 40,
+        sectionsSpace: 2,
+      ),
+      swapAnimationDuration: Duration(seconds: 1),
+      swapAnimationCurve: Curves.easeInOut,
+    );
   }
 }
