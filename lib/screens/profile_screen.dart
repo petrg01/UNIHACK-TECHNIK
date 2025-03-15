@@ -4,6 +4,8 @@ import 'package:technik/widgets/friends_list.dart';
 import 'package:technik/data/friends_data.dart';
 import 'package:technik/widgets/goals_list.dart';
 import 'package:technik/data/goals_data.dart';
+import 'package:technik/widgets/notification_preferences_list.dart';
+import 'package:technik/data/notification_preferences_data.dart';
 
 class ProfileScreen extends StatelessWidget {
   @override
@@ -62,7 +64,7 @@ class ProfileScreen extends StatelessWidget {
                   _buildActionButton(
                     icon: Icons.notifications_none,
                     label: "Notification",
-                    onTap: () {},
+                    onTap: () => _showNotificationPreferencesPopup(context),
                   ),
                   _buildActionButton(
                     icon: Icons.fitness_center,
@@ -125,6 +127,42 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showNotificationPreferencesPopup(BuildContext context) {
+    // Get sample notification preferences data
+    final preferences = NotificationPreferencesData.getSamplePreferences();
+
+    // Show the custom popup with notification preferences list
+    CustomPopup.show(
+      context: context,
+      title: "Notification Settings",
+      content: NotificationPreferencesList(
+        preferences: preferences,
+        onPreferencesChanged: (updatedPreferences) {
+          // Here you would typically save these preferences to a backend
+          print("Preferences updated");
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Notification preferences saved"),
+                backgroundColor: Color(0xFF4CD964),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          child: Text(
+            "Save",
+            style: TextStyle(color: Color(0xFF4CD964)),
+          ),
+        ),
+      ],
     );
   }
 
