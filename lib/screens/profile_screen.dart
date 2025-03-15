@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:technik/widgets/custom_popup.dart';
 import 'package:technik/widgets/friends_list.dart';
 import 'package:technik/data/friends_data.dart';
+import 'package:technik/widgets/goals_list.dart';
+import 'package:technik/data/goals_data.dart';
 
 class ProfileScreen extends StatelessWidget {
   @override
@@ -65,7 +67,7 @@ class ProfileScreen extends StatelessWidget {
                   _buildActionButton(
                     icon: Icons.fitness_center,
                     label: "Goals",
-                    onTap: () {},
+                    onTap: () => _showGoalsPopup(context),
                   ),
                   _buildActionButton(
                     icon: Icons.person,
@@ -123,6 +125,52 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showGoalsPopup(BuildContext context) {
+    // Get sample goals data
+    final goals = GoalsData.getSampleGoals();
+
+    // Show the custom popup with goals list
+    CustomPopup.show(
+      context: context,
+      title: "Your Financial Goals",
+      content: GoalsList(
+        goals: goals,
+        onGoalTap: (goal) {
+          // Close the popup
+          Navigator.of(context).pop();
+          
+          // Show a snackbar to demonstrate the action
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Goal details: ${goal.title}"),
+              backgroundColor: goal.categoryColor ?? Color(0xFF4CD964),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            // Here you could navigate to a 'Add Goal' screen
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Add goal feature coming soon!"),
+                backgroundColor: Color(0xFF4CD964),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          child: Text(
+            "Add Goal",
+            style: TextStyle(color: Color(0xFF4CD964)),
+          ),
+        ),
+      ],
     );
   }
 
