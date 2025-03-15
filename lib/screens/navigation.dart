@@ -33,7 +33,7 @@ class _NavigationState extends State<Navigation> {
       body: _screens[_selectedIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.blueAccent, width: 2)), // Blue outline
+          border: Border(top: BorderSide(color: Colors.black, width: 2)), // Blue outline
         ),
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
@@ -44,23 +44,23 @@ class _NavigationState extends State<Navigation> {
           type: BottomNavigationBarType.fixed, // Keeps labels visible
           items: [
             BottomNavigationBarItem(
-              icon: ImageIcon(AssetImage('icons/mynaui_home.png'), size: 30),
+              icon: Image.asset('lib/icons/home.png', width: 40, height: 40),
               label: "Home",
             ),
             BottomNavigationBarItem(
-              icon: ImageIcon(AssetImage('icons/gala_calendar.png'), size: 30), // Fixed path for History
+              icon: Image.asset('lib/icons/calendar.png', width: 40, height: 40), // Fixed path for History
               label: "History",
             ),
             BottomNavigationBarItem(
-              icon: ImageIcon(AssetImage('mynaui_home.png'), size: 30),
+              icon: Image.asset('lib/icons/brain.png', width: 53, height: 53),
               label: "", // No text for Advisor
             ),
             BottomNavigationBarItem(
-              icon: ImageIcon(AssetImage('lib/icons/prizes.png'), size: 30),
+              icon: Image.asset('lib/icons/gift.png', width: 40, height: 40),
               label: "Prizes",
             ),
             BottomNavigationBarItem(
-              icon: ImageIcon(AssetImage('lib/icons/profile.png'), size: 30),
+              icon: Image.asset('lib/icons/profile.png', width: 40, height: 40),
               label: "Profile",
             ),
           ],
