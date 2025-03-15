@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:technik/widgets/custom_popup.dart';
+import 'package:technik/widgets/friends_list.dart';
+import 'package:technik/data/friends_data.dart';
 
 class ProfileScreen extends StatelessWidget {
   @override
@@ -67,7 +70,7 @@ class ProfileScreen extends StatelessWidget {
                   _buildActionButton(
                     icon: Icons.person,
                     label: "Friends",
-                    onTap: () {},
+                    onTap: () => _showFriendsPopup(context),
                   ),
                 ],
               ),
@@ -120,6 +123,52 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showFriendsPopup(BuildContext context) {
+    // Get sample friends data
+    final friends = FriendsData.getSampleFriends();
+
+    // Show the custom popup with friends list
+    CustomPopup.show(
+      context: context,
+      title: "Your Friends",
+      content: FriendsList(
+        friends: friends,
+        onFriendTap: (friend) {
+          // Close the popup
+          Navigator.of(context).pop();
+          
+          // Show a snackbar to demonstrate the action
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Selected friend: ${friend.name}"),
+              backgroundColor: Color(0xFF4CD964), // Green color
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            // Here you could navigate to a 'Add Friend' screen
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Add friend feature coming soon!"),
+                backgroundColor: Color(0xFF4CD964), // Green color
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          child: Text(
+            "Add Friend",
+            style: TextStyle(color: Color(0xFF4CD964)),
+          ),
+        ),
+      ],
     );
   }
 
