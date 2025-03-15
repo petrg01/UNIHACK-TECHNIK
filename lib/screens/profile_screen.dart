@@ -18,12 +18,73 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   // List of goals that can be updated when a new goal is added
   List<Goal> _goals = [];
+  String _userName = "John Johnson";
 
   @override
   void initState() {
     super.initState();
     // Initialize with sample goals
     _goals = GoalsData.getSampleGoals();
+  }
+
+  void _showEditNameDialog(BuildContext context) {
+    final TextEditingController nameController = TextEditingController(text: _userName);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Color(0xFF3e3d3e),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: Text(
+            "Edit Profile Name",
+            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          content: TextField(
+            controller: nameController,
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              labelText: "Name",
+              labelStyle: TextStyle(color: Colors.grey),
+              filled: true,
+              fillColor: Color(0xFF2c2c2e),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                "Cancel",
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                if (nameController.text.trim().isNotEmpty) {
+                  setState(() {
+                    _userName = nameController.text.trim();
+                  });
+                  Navigator.of(context).pop();
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Profile name updated"),
+                      backgroundColor: Color(0xFF4CD964),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              child: Text(
+                "Save",
+                style: TextStyle(color: Color(0xFF4CD964)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -60,14 +121,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              // User Name
-              Text(
-                "John Johnson",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
+              // User Name with Edit Button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _userName,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => _showEditNameDialog(context),
+                    child: Container(
+                      padding: EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF4CD964).withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.edit,
+                        size: 20,
+                        color: Color(0xFF4CD964),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 30),
               // Quick Action Buttons
