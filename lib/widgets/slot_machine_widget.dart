@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:technik/globals.dart';
 import 'dart:async';
 import 'dart:math';
+
+import 'package:technik/widgets/header_widget.dart';
 
 class SlotMachineWidget extends StatefulWidget {
   final Function(int) onWin;
@@ -246,6 +249,8 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+
+          HeaderWidget(userName: userName),
           SizedBox(height: 30),
           
           // Slot machine body
@@ -386,3 +391,204 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
     );
   }
 }
+/*
+import 'package:flutter/material.dart';
+import '../widgets/slot_machine_widget.dart';
+import "../globals.dart";
+
+class PrizeDrawScreen extends StatefulWidget {
+  @override
+  _PrizeDrawScreenState createState() => _PrizeDrawScreenState();
+}
+
+class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
+  int totalWinnings = 0;
+  
+  void _handleWin(int amount) {
+    setState(() {
+      totalWinnings += amount;
+    });
+    // Additional code to handle wins if needed
+  }
+
+  void _handleGameStart() {
+  if (points >= 100) {
+    setState(() {
+      points -= 100;
+    });
+    savePoints(); // Save updated points
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Not enough points to play"))
+    );
+  }
+}
+
+  // Helper function to determine the progress bar color based on progress.
+  Color _getProgressColor(double progress) {
+    if (progress < 0.33) {
+      return Colors.red;
+    } else if (progress < 0.66) {
+      return Colors.yellow;
+    } else {
+      return Colors.green;
+    }
+  }
+
+  // Helper function to build a badge item with a progress bar.
+  Widget buildBadge(String name, String description, double progress) {
+    return Container(
+      width: 120,
+      margin: EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Placeholder icon for the badge.
+          Icon(
+            Icons.emoji_events,
+            size: 50,
+            color: Colors.amber,
+          ),
+          SizedBox(height: 8),
+          Text(
+            name,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 4),
+          Text(
+            description,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 4),
+          // Progress bar for the badge with rounded corners.
+          Container(
+            height: 8,
+            width: double.infinity,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4), // Adjust corner radius as needed
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.grey[800],
+                valueColor: AlwaysStoppedAnimation<Color>(_getProgressColor(progress)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+    // Header built inline to display points instead of a username.
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 10),
+      decoration: const BoxDecoration(
+        color: Colors.black,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Image.asset(
+            'lib/icons/logo.png',
+            height: 57,
+            width: 56,
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              const Text(
+                "Points",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              Text(
+                "$points",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFF2c2c2e),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+                // Insert header displaying points.
+              //_buildHeader(),
+              //SizedBox(height: 10),
+
+              // Slot Machine Widget at the top.
+               SlotMachineWidget(
+              onWin: _handleWin,
+             // onGameStart: _handleGameStart, // New callback
+              initialCredits: 100,
+            ),
+              SizedBox(height: 20),
+              // "Badges" section title.
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Badges",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 12),
+              // Horizontal scrollable widget for badges.
+              Container(
+                height: 160,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      buildBadge("Beginner", "First spin bonus", 0.2),
+                      buildBadge("Lucky", "Hit a jackpot once", 0.5),
+                      buildBadge("Veteran", "Played 100 spins", 0.8),
+                      buildBadge("Champion", "Winnings > 1000", 1.0),
+                      buildBadge("Master", "Mastered the slots", 0.9),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              // Additional content if needed.
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+*/
