@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../db/db.dart';
 import '../models/transaction.dart';
@@ -293,95 +294,185 @@ Future<bool?> _confirmDelete(BuildContext context, Transaction tx) {
     },
   );
 }
+void _showTimePicker(BuildContext context, DateTime selectedDateTime, Function(DateTime) onTimeSelected) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true, // Prevents overflow
+    backgroundColor: Colors.transparent, // Makes UI smoother
+    builder: (BuildContext builder) {
+      return Container(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        decoration: BoxDecoration(
+          color: Color(0xFF2c2c2e), // Dark theme background
+          borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+        ),
+        child: Wrap( // Allows automatic resizing
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: 180, // Prevents layout issues
+                    child: CupertinoDatePicker(
+                      mode: CupertinoDatePickerMode.time,
+                      initialDateTime: selectedDateTime,
+                      use24hFormat: true,
+                      onDateTimeChanged: (DateTime newTime) {
+                        onTimeSelected(DateTime(
+                          selectedDateTime.year,
+                          selectedDateTime.month,
+                          selectedDateTime.day,
+                          newTime.hour,
+                          newTime.minute,
+                        ));
+                      },
+                    ),
+                  ),
+                  CupertinoButton(
+                    child: Text("Done", style: TextStyle(color: Colors.blue, fontSize: 18, fontWeight: FontWeight.bold)),
+                    onPressed: () => Navigator.of(context).pop(),
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
 void _showEditDialog(BuildContext context, Transaction tx) {
   TextEditingController descController = TextEditingController(text: tx.description);
   TextEditingController amountController = TextEditingController(text: tx.amount.toStringAsFixed(2));
-  DateTime selectedDate = DateTime.parse(tx.date);
+  DateTime selectedDateTime = DateTime.parse(tx.date);
 
   showDialog(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
         backgroundColor: Color(0xFF3e3d3d),
-        title: Text("Edit Transaction", style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Date Picker
-            TextButton(
-              onPressed: () async {
-                DateTime? pickedDate = await showDatePicker(
-                  context: context,
-                  initialDate: selectedDate,
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (pickedDate != null) {
-                  selectedDate = pickedDate;
-                }
-              },
-              child: Text(
-                "Date: ${DateFormat('yyyy-MM-dd').format(selectedDate)}",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-
-            // Time Picker
-            TextButton(
-              onPressed: () async {
-                TimeOfDay? pickedTime = await showTimePicker(
-                  context: context,
-                  initialTime: TimeOfDay.fromDateTime(selectedDate),
-                );
-                if (pickedTime != null) {
-                  selectedDate = DateTime(
-                    selectedDate.year,
-                    selectedDate.month,
-                    selectedDate.day,
-                    pickedTime.hour,
-                    pickedTime.minute,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)), // Rounded corners
+        title: Text("Edit Transaction", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+        content: SingleChildScrollView( // Prevents overflow
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Date Picker
+              GestureDetector(
+                onTap: () async {
+                  DateTime? pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDateTime,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
                   );
-                }
-              },
-              child: Text(
-                "Time: ${DateFormat('HH:mm').format(selectedDate)}",
-                style: TextStyle(color: Colors.white),
+                  if (pickedDate != null) {
+                    selectedDateTime = DateTime(
+                      pickedDate.year,
+                      pickedDate.month,
+                      pickedDate.day,
+                      selectedDateTime.hour,
+                      selectedDateTime.minute,
+                    );
+                  }
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                  margin: EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF2c2c2e),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Date: ${DateFormat('yyyy-MM-dd').format(selectedDateTime)}",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      Icon(Icons.calendar_today, color: Colors.white54, size: 18),
+                    ],
+                  ),
+                ),
               ),
-            ),
 
-            // Description
-            TextField(
-              controller: descController,
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(labelText: "Description", labelStyle: TextStyle(color: Colors.grey)),
-            ),
+              // Time Picker
+              GestureDetector(
+                onTap: () => _showTimePicker(context, selectedDateTime, (newTime) {
+                  selectedDateTime = newTime;
+                }),
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                  margin: EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF2c2c2e),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Time: ${DateFormat('HH:mm').format(selectedDateTime)}",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      Icon(Icons.access_time, color: Colors.white54, size: 18),
+                    ],
+                  ),
+                ),
+              ),
 
-            // Amount
-            TextField(
-              controller: amountController,
-              keyboardType: TextInputType.number,
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(labelText: "Amount", labelStyle: TextStyle(color: Colors.grey)),
-            ),
-          ],
+              // Description Input
+              TextField(
+                controller: descController,
+                style: TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: "Description",
+                  labelStyle: TextStyle(color: Colors.grey),
+                  filled: true,
+                  fillColor: Color(0xFF2c2c2e),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+
+              SizedBox(height: 10),
+
+              // Amount Input
+              TextField(
+                controller: amountController,
+                keyboardType: TextInputType.number,
+                style: TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: "Amount",
+                  labelStyle: TextStyle(color: Colors.grey),
+                  filled: true,
+                  fillColor: Color(0xFF2c2c2e),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text("Cancel", style: TextStyle(color: Colors.grey)),
+            child: Text("Cancel", style: TextStyle(color: Colors.grey, fontSize: 16)),
           ),
           TextButton(
             onPressed: () async {
               await TransactionDB.updateTransaction(tx.id!, {
-                'date': DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDate),
+                'date': DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDateTime),
                 'description': descController.text,
                 'amount': double.tryParse(amountController.text) ?? tx.amount,
               });
               _loadTransactions(); // Refresh UI
               Navigator.of(context).pop();
             },
-            child: Text("Save", style: TextStyle(color: Colors.blue)),
+            child: Text("Save", style: TextStyle(color: Colors.blue, fontSize: 16, fontWeight: FontWeight.bold)),
           ),
         ],
       );
