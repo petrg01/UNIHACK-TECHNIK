@@ -42,6 +42,7 @@ dependencies:
   auto_size_text: ^3.0.0
   fl_chart: ^0.70.2
   smooth_page_indicator: ^1.2.1
+  shared_preferences: ^2.5.2
 
 dev_dependencies:
   flutter_test:
