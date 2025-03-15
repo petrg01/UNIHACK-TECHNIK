@@ -8,8 +8,24 @@ import 'package:technik/widgets/notification_preferences_list.dart';
 import 'package:technik/data/notification_preferences_data.dart';
 import 'package:technik/widgets/subscription_list.dart';
 import 'package:technik/data/subscription_data.dart';
+import 'package:technik/widgets/add_goal_form.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // List of goals that can be updated when a new goal is added
+  List<Goal> _goals = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with sample goals
+    _goals = GoalsData.getSampleGoals();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,6 +148,41 @@ class ProfileScreen extends StatelessWidget {
     );
   }
   
+  void _showAddGoalForm(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Color(0xFF3c3c3e),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.all(20),
+        child: AddGoalForm(
+          onGoalAdded: (Goal newGoal) {
+            // Add the new goal to the list
+            setState(() {
+              _goals.add(newGoal);
+            });
+            
+            // Close the goals popup and show a success message
+            Navigator.pop(context); // Close the bottom sheet
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Goal '${newGoal.title}' added successfully!"),
+                backgroundColor: newGoal.categoryColor ?? Color(0xFF4CD964),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            
+            // Show the updated goals list
+            _showGoalsPopup(context);
+          },
+        ),
+      ),
+    );
+  }
+  
   void _showSubscriptionsPopup(BuildContext context) {
     // Get sample subscriptions data
     final subscriptions = SubscriptionData.getSampleSubscriptions();
@@ -249,8 +300,8 @@ class ProfileScreen extends StatelessWidget {
   }
 
   void _showGoalsPopup(BuildContext context) {
-    // Get sample goals data
-    final goals = GoalsData.getSampleGoals();
+    // Use the managed goals list instead of getting sample goals
+    final goals = _goals;
 
     // Show the custom popup with goals list
     CustomPopup.show(
@@ -276,14 +327,8 @@ class ProfileScreen extends StatelessWidget {
         TextButton(
           onPressed: () {
             Navigator.of(context).pop();
-            // Here you could navigate to a 'Add Goal' screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Add goal feature coming soon!"),
-                backgroundColor: Color(0xFF4CD964),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            // Open the Add Goal form
+            _showAddGoalForm(context);
           },
           child: Text(
             "Add Goal",
