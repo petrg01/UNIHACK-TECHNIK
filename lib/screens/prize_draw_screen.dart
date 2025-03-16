@@ -91,7 +91,6 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
               // Slot Machine Widget at the top.
               SlotMachineWidget(
                 onWin: _handleWin,
-                initialCredits: 100,
               ),
               SizedBox(height: 20),
               // "Badges" section title.
