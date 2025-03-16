@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:technik/globals.dart';
+import 'package:technik/data/friends_goals_data.dart';
+import 'package:technik/widgets/friends_goals_table.dart';
 import '../widgets/dynamic_widget.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../widgets/line_chart_widget.dart';
@@ -21,6 +23,18 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     // Print the global points variable to the terminal every time the page is opened.
     print("Global points: $points");
+    // Load friends data if needed
+    _loadFriendsData();
+  }
+  
+  // Load friends data if not already loaded
+  Future<void> _loadFriendsData() async {
+    if (userFriends.isEmpty) {
+      await loadFriends();
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
   @override
@@ -28,6 +42,9 @@ class _MainScreenState extends State<MainScreen> {
     // Calculate widget width based on screen width and horizontal padding
     final double screenWidth = MediaQuery.of(context).size.width;
     final double widgetWidth = screenWidth - 16; // 8px padding each side
+
+    // Get friends' goals data
+    final friendsGoals = FriendsGoalsData.getSampleFriendsGoals();
 
     return Scaffold(
       backgroundColor: Color(0xFF2c2c2e),
@@ -156,16 +173,16 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              // Additional static widget (New Widget Below)
+              // Friends Goals Progress Table
               DynamicWidget(
                 width: widgetWidth,
-                height: 150,
+                height: null, // Auto height based on content
                 cornerRadius: 45,
-                child: Center(
-                  child: Text(
-                    "New Widget Below",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                    textAlign: TextAlign.center,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: FriendsGoalsTable(
+                    friends: userFriends,
+                    friendsGoals: friendsGoals,
                   ),
                 ),
               ),

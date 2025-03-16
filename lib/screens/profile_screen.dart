@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:technik/globals.dart';
 import 'package:technik/widgets/custom_popup.dart';
 import 'package:technik/widgets/friends_list.dart';
@@ -10,6 +12,7 @@ import 'package:technik/data/notification_preferences_data.dart';
 import 'package:technik/widgets/subscription_list.dart';
 import 'package:technik/data/subscription_data.dart';
 import 'package:technik/widgets/add_goal_form.dart';
+import 'package:technik/widgets/add_friend_form.dart';
 import '../widgets/header_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -20,12 +23,65 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   // List of goals that can be updated when a new goal is added
   List<Goal> _goals = [];
+  // Instance of ImagePicker to pick images from gallery
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
     // Initialize with sample goals
     _goals = GoalsData.getSampleGoals();
+    // Load profile image if available
+    _loadProfileImage();
+    // Load friends data
+    _loadFriendsData();
+  }
+  
+  // Load profile image from shared preferences
+  Future<void> _loadProfileImage() async {
+    await loadProfileImage();
+    // Update UI if image path is loaded
+    if (mounted) {
+      setState(() {});
+    }
+  }
+  
+  // Load friends data from shared preferences
+  Future<void> _loadFriendsData() async {
+    await loadFriends();
+    // Update UI if needed
+    if (mounted) {
+      setState(() {});
+    }
+  }
+  
+  // Function to pick image from gallery
+  Future<void> _pickImage() async {
+    try {
+      final XFile? pickedImage = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        imageQuality: 85,
+      );
+      
+      if (pickedImage != null) {
+        setState(() {
+          profileImagePath = pickedImage.path;
+        });
+        // Save the profile image path
+        await saveProfileImage();
+      }
+    } catch (e) {
+      // Show error message if image picking fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to pick image: $e"),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
   
   //final String userName = "John Johnson";
@@ -42,26 +98,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
               //HeaderWidget(userName: userName),
               SizedBox(height: 60),
               // Profile Picture
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Color(0xFF3c3c3e),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: ClipOval(
-                    child: Container(
-                      width: 90,
-                      height: 90,
-                      color: Colors.pink[50],
-                      child: Icon(
-                        Icons.person,
-                        size: 60,
-                        color: Colors.black54,
+              GestureDetector(
+                onTap: _pickImage,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF3c3c3e),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: ClipOval(
+                          child: Container(
+                            width: 90,
+                            height: 90,
+                            color: profileImagePath == null ? Colors.pink[50] : null,
+                            child: profileImagePath == null 
+                                ? _buildDefaultProfileIcon() 
+                                : _buildProfileImage(),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF4CD964),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.camera_alt,
+                          color: Colors.black,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               SizedBox(height: 20),
@@ -233,34 +310,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         TextButton(
           onPressed: () {
             Navigator.of(context).pop();
-            // Show a message that subscriptions settings are saved
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Subscription preferences saved"),
-                backgroundColor: Color(0xFF4CD964),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
           },
           child: Text(
-            "Save",
-            style: TextStyle(color: Color(0xFF4CD964)),
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-            // Here you could navigate to a 'Add Subscription' screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Add subscription feature coming soon!"),
-                backgroundColor: Color(0xFF4CD964),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          },
-          child: Text(
-            "Add New",
+            "Close",
             style: TextStyle(color: Color(0xFF4CD964)),
           ),
         ),
@@ -380,9 +432,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _showAddFriendForm(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Color(0xFF3c3c3e),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          // Add extra padding when keyboard appears
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: SingleChildScrollView(
+          child: AddFriendForm(
+            onFriendAdded: (Friend newFriend) async {
+              // Add the new friend to global list
+              await addFriend(newFriend);
+              
+              // Close the form
+              Navigator.pop(context);
+              
+              // Show success message
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Friend @${newFriend.name} added successfully!"),
+                  backgroundColor: Color(0xFF4CD964),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              
+              // Update UI
+              setState(() {});
+              
+              // Show the updated friends list
+              _showFriendsPopup(context);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showFriendsPopup(BuildContext context) {
-    // Get sample friends data
-    final friends = FriendsData.getSampleFriends();
+    // Use the global friends list instead of sample data
+    final friends = userFriends;
 
     // Show the custom popup with friends list
     CustomPopup.show(
@@ -397,9 +495,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Show a snackbar to demonstrate the action
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Selected friend: ${friend.name}"),
+              content: Text("Selected username: @${friend.name}"),
               backgroundColor: Color(0xFF4CD964), // Green color
               behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+        onFriendRemoved: (friend) async {
+          // Remove the friend from the global list
+          await removeFriend(friend);
+          
+          // Update UI
+          setState(() {});
+          
+          // Show a snackbar to confirm removal
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("@${friend.name} removed from your friends list"),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(
+                label: 'UNDO',
+                textColor: Colors.white,
+                onPressed: () async {
+                  // Add the friend back if user taps undo
+                  await addFriend(friend);
+                  
+                  // Update UI
+                  setState(() {});
+                  
+                  // Show the friends list with the restored friend
+                  _showFriendsPopup(context);
+                  
+                  // Show confirmation
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("@${friend.name} added back to your friends list"),
+                      backgroundColor: Color(0xFF4CD964),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
             ),
           );
         },
@@ -408,14 +545,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         TextButton(
           onPressed: () {
             Navigator.of(context).pop();
-            // Here you could navigate to a 'Add Friend' screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Add friend feature coming soon!"),
-                backgroundColor: Color(0xFF4CD964), // Green color
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            // Show the Add Friend form
+            _showAddFriendForm(context);
           },
           child: Text(
             "Add Friend",
@@ -496,6 +627,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Helper method to build the default profile icon
+  Widget _buildDefaultProfileIcon() {
+    return Icon(
+      Icons.person,
+      size: 60,
+      color: Colors.black54,
+    );
+  }
+  
+  // Helper method to build the profile image with error handling
+  Widget _buildProfileImage() {
+    final file = File(profileImagePath!);
+    
+    // Check if file exists
+    if (!file.existsSync()) {
+      // If file doesn't exist, reset the path and return default icon
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          profileImagePath = null;
+        });
+      });
+      return _buildDefaultProfileIcon();
+    }
+    
+    // Otherwise try to load the image with error handling
+    return Image.file(
+      file,
+      fit: BoxFit.cover,
+      width: 90,
+      height: 90,
+      errorBuilder: (context, error, stackTrace) {
+        // If there's an error loading the image, log it and return default icon
+        print('Error loading profile image: $error');
+        
+        // Reset path on next frame to avoid repeated errors
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            profileImagePath = null;
+          });
+        });
+        
+        return _buildDefaultProfileIcon();
+      },
     );
   }
 }
