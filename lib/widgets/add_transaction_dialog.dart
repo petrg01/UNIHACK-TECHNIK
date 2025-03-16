@@ -24,12 +24,21 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
   DateTime selectedDateTime = DateTime.now();
 
   // New state variables for the dropdown fields.
-  String? selectedCategory;
   String? selectedOperation = "Withdrawal"; // Default value.
+  String? selectedCategory;
 
-  // Dropdown options.
-  final List<String> categoryOptions = ["Food", "Transport", "Entertainment", "Bills", "Other"];
-  final List<String> operationOptions = ["Withdrawal", "Income"];
+  // Dynamic Category Lists
+  final List<String> withdrawalCategories = [
+    "Food", "Transport", "Entertainment", "Bills", "Personal Care", 
+    "Healthcare", "Education", "Debt Payments", "Shopping", "Travel", 
+    "Gifts & Holidays", "Charity & Donations", "Other"
+  ];
+
+  final List<String> depositCategories = [
+    "Salary", "Investment", "Gift", "Other"
+  ];
+
+  final List<String> operationOptions = ["Withdrawal", "Deposit"];
 
   Future<void> _showDatePicker() async {
     DateTime? pickedDate = await showDatePicker(
@@ -198,21 +207,27 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                 child: _buildPickerField("Time", DateFormat('HH:mm').format(selectedDateTime), Icons.access_time),
               ),
               SizedBox(height: 10),
-              _buildDropdownField("Category", selectedCategory, categoryOptions, (newValue) {
+              _buildDropdownField("Operation Type", selectedOperation, operationOptions, (newValue) {
                 setState(() {
-                  selectedCategory = newValue;
+                  selectedOperation = newValue;
+                  selectedCategory = null; // Reset category when operation changes
                 });
               }),
+              SizedBox(height: 10),
+              _buildDropdownField(
+                "Category",
+                selectedCategory,
+                selectedOperation == "Withdrawal" ? withdrawalCategories : depositCategories,
+                (newValue) {
+                  setState(() {
+                    selectedCategory = newValue;
+                  });
+                },
+              ),
               if (selectedCategory == "Other") ...[
                 SizedBox(height: 10),
                 _buildTextField(customCategoryController, "Custom Category"),
               ],
-              SizedBox(height: 10),
-              _buildDropdownField("Operation Type", selectedOperation, operationOptions, (newValue) {
-                setState(() {
-                  selectedOperation = newValue;
-                });
-              }),
               SizedBox(height: 10),
               _buildTextField(descController, "Description"),
               SizedBox(height: 10),
@@ -223,37 +238,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
       ),
       actions: [
         _buildDialogButton("Cancel", Colors.white70, () => Navigator.of(context).pop()),
-        _buildDialogButton("Save", Color(0xFF4CD964), () async {
-          double? amount = double.tryParse(amountController.text);
-          if (amount == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Invalid amount!"),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-            return;
-          }
-
-          // Backend is not updated for the new fields yet.
-          final newTx = Transaction(
-            date: DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDateTime),
-            description: descController.text,
-            amount: amount,
-          );
-
-          await TransactionDB.insertTransaction(newTx.toMap());
-          Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Transaction Added!"),
-              backgroundColor: Color(0xFF4CD964),
-              behavior: SnackBarBehavior.floating,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }),
+        _buildDialogButton("Save", Color(0xFF4CD964), () {}),
       ],
     );
   }
