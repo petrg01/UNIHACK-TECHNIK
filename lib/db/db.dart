@@ -18,7 +18,8 @@ class TransactionDB {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           date TEXT,  -- Stores date & time in "YYYY-MM-DD HH:mm:ss"
           description TEXT,
-          amount REAL
+          amount REAL,
+          category TEXT
         )
       ''');
     });

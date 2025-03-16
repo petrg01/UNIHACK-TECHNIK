@@ -57,11 +57,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
 @override
   Widget build(BuildContext context) {
+    final NumberFormat currencyFormatter = NumberFormat("#,##0.00", "en_US");
+
     return Scaffold(
       backgroundColor: Color(0xFF2c2c2e),
       body: Column(
         children: [
-          HeaderWidget(userName: userName), // ✅ Add the header with the global user name
+          HeaderWidget(userName: userName), 
           Expanded(
             child: ListView(
               padding: EdgeInsets.all(8),
@@ -70,7 +72,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 List<Transaction> transactions = entry.value;
                 double total = _calculateTotal(transactions);
 
-                // Show only the first 3 transactions initially
                 List<Transaction> displayedTransactions = transactions.take(3).toList();
 
                 return Padding(
@@ -111,13 +112,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                       style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                                     ),
                                     Text(
-                                      "${total == 0 ? '' : (total > 0 ? '+' : '')}${total.toStringAsFixed(2)}\$",
-                                      style: TextStyle(
-                                        color: total > 0 ? Colors.green : (total < 0 ? Colors.red : Colors.white),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                        "${total == 0 ? '' : (total > 0 ? '+' : '')}${currencyFormatter.format(total)}\$",
+                                        style: TextStyle(
+                                          color: total > 0 ? Colors.green : (total < 0 ? Colors.red : Colors.white),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
                                   ],
                                 ),
                               ],
@@ -146,7 +147,7 @@ Widget _buildTransactionRow(Transaction tx) {
   } catch (e) {
     print("Error extracting time: $e");
   }
-
+  
   // Correct formatting for numbers with thousand separators and exactly 2 decimal places
   final NumberFormat currencyFormatter = NumberFormat("#,##0.00", "en_US");
 
@@ -155,28 +156,41 @@ Widget _buildTransactionRow(Transaction tx) {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Transaction Description & Time
+        // Transaction Description & Time + Category
         Expanded(
           flex: 2,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AutoSizeText(
-                tx.description, // Full name is visible
+                tx.description, // Full description
                 style: TextStyle(color: Colors.white, fontSize: 16),
-                maxLines: 1, // Keep it on one line
-                minFontSize: 10, // Prevents text from becoming too small
-              ),
-              AutoSizeText(
-                time,
-                style: TextStyle(color: Colors.grey, fontSize: 12),
-                maxLines: 1,
+                maxLines: 1, 
                 minFontSize: 10,
+              ),
+              Row(
+                children: [
+                  AutoSizeText(
+                    time,
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                    maxLines: 1,
+                    minFontSize: 10,
+                  ),
+                  if (tx.category?.isNotEmpty ?? false)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: AutoSizeText(
+                        tx.category!,
+                        style: TextStyle(color: Colors.amberAccent, fontSize: 12),
+                        maxLines: 1,
+                        minFontSize: 10,
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
         ),
-
         // Amount (Formatted correctly)
         Expanded(
           flex: 1,
@@ -186,11 +200,11 @@ Widget _buildTransactionRow(Transaction tx) {
               "${tx.amount == 0 ? '' : (tx.amount > 0 ? '+' : '')}${currencyFormatter.format(tx.amount)}\$",
               style: TextStyle(
                 color: tx.amount > 0 ? Colors.green : (tx.amount < 0 ? Colors.red : Colors.white),
-                fontSize: 16, // Base size
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
               maxLines: 1,
-              minFontSize: 10, // Ensures text stays readable
+              minFontSize: 10,
             ),
           ),
         ),
@@ -198,12 +212,12 @@ Widget _buildTransactionRow(Transaction tx) {
     ),
   );
 }
+
+
 Future<void> _deleteTransaction(Transaction tx) async {
-  await TransactionDB.deleteTransaction(tx.id!);
-  setState(() {
-    _loadTransactions(); // Refresh UI
-  });
-}
+    await TransactionDB.deleteTransaction(tx.id!);
+    await _loadTransactions(); // Refresh UI after deletion completes
+  }
 
 Future<bool?> _confirmDelete(BuildContext context, Transaction tx) {
   return showDialog<bool>(
@@ -232,70 +246,113 @@ Future<bool?> _confirmDelete(BuildContext context, Transaction tx) {
 }
 
 
- void _showFullTransactionList(BuildContext context, String date, List<Transaction> transactions) {
+void _showFullTransactionList(BuildContext context, String date, List<Transaction> transactions) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: Color(0xFF3e3d3d),
-        title: Text(
-          "Transactions - $date",
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        content: Container(
-          width: double.maxFinite,
-          height: MediaQuery.of(context).size.height * 0.6,
-          child: ListView.builder(
-            itemCount: transactions.length,
-            itemBuilder: (context, index) {
-              final tx = transactions[index];
-
-              return Dismissible(
-                key: Key(tx.id.toString()),
-                background: Container(
-                  alignment: Alignment.centerLeft,
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  color: Colors.blue,
-                  child: Icon(Icons.edit, color: Colors.white),
-                ),
-                secondaryBackground: Container(
-                  alignment: Alignment.centerRight,
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  color: Colors.red,
-                  child: Icon(Icons.delete, color: Colors.white),
-                ),
-                direction: DismissDirection.horizontal,
-                confirmDismiss: (direction) async {
-                  if (direction == DismissDirection.endToStart) {
-                    return await _confirmDelete(context, tx);
-                  } else if (direction == DismissDirection.startToEnd) {
-                    _showEditDialog(context, tx);
-                    return false; // Prevent swipe dismissal for edit
+      // Wrap the dialog in a StatefulBuilder to allow local updates
+      return StatefulBuilder(
+        builder: (BuildContext context, void Function(void Function()) setStateDialog) {
+          return AlertDialog(
+            backgroundColor: Color(0xFF3e3d3d),
+            title: Text(
+              "Transactions - $date",
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            content: Container(
+              width: double.maxFinite,
+              height: MediaQuery.of(context).size.height * 0.6,
+              // Reload the transactions from the DB so that any updates are reflected
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: TransactionDB.getTransactions(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
                   }
-                  return false;
+                  if (snapshot.hasError) {
+                    return Center(child: Text("Error loading transactions", style: TextStyle(color: Colors.white)));
+                  }
+                  // Convert the raw data into Transaction objects
+                  List<Transaction> allTransactions = snapshot.data!
+                      .map((tx) => Transaction.fromMap(tx))
+                      .toList();
+                  // Filter transactions for the specific date
+                  List<Transaction> filteredTransactions = allTransactions.where((tx) {
+                    return _formatDate(tx.date) == date;
+                  }).toList();
+
+                  if(filteredTransactions.isEmpty) {
+                    return Center(child: Text("No transactions for this date", style: TextStyle(color: Colors.white)));
+                  }
+
+                  return ListView.builder(
+                    itemCount: filteredTransactions.length,
+                    itemBuilder: (context, index) {
+                      final tx = filteredTransactions[index];
+                      return Dismissible(
+                        key: Key(tx.id.toString()),
+                        background: Container(
+                          alignment: Alignment.centerLeft,
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          color: Colors.blue,
+                          child: Icon(Icons.edit, color: Colors.white),
+                        ),
+                        secondaryBackground: Container(
+                          alignment: Alignment.centerRight,
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          color: Colors.red,
+                          child: Icon(Icons.delete, color: Colors.white),
+                        ),
+                        direction: DismissDirection.horizontal,
+                        confirmDismiss: (direction) async {
+                          if (direction == DismissDirection.endToStart) {
+                            // Delete case
+                            bool? confirmed = await _confirmDelete(context, tx);
+                            if (confirmed == true) {
+                              await _deleteTransaction(tx);
+                              // Refresh the dialog state
+                              setStateDialog(() {});
+                              return true;
+                            }
+                            return false;
+                          } else if (direction == DismissDirection.startToEnd) {
+                            // Edit case
+                            _showEditDialog(context, tx);
+                            // Refresh the dialog state after edit
+                            setStateDialog(() {});
+                            return false;
+                          }
+                          return false;
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF3e3d3d),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: _buildTransactionRow(tx),
+                        ),
+                      );
+                    },
+                  );
                 },
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF3e3d3d), // Match pop-up background
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: _buildTransactionRow(tx),
-                ),
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text("Close", style: TextStyle(color: Colors.white)),
-          ),
-        ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text("Close", style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          );
+        },
       );
     },
   );
 }
+
+
+
 void _showTimePicker(BuildContext context, DateTime selectedDateTime, Function(DateTime) onTimeSelected) {
   showModalBottomSheet(
     context: context,
@@ -347,136 +404,194 @@ void _showTimePicker(BuildContext context, DateTime selectedDateTime, Function(D
 }
 
 void _showEditDialog(BuildContext context, Transaction tx) {
-  TextEditingController descController = TextEditingController(text: tx.description);
-  TextEditingController amountController = TextEditingController(text: tx.amount.toStringAsFixed(2));
+  TextEditingController descController =
+      TextEditingController(text: tx.description);
+  TextEditingController amountController =
+      TextEditingController(text: tx.amount.toStringAsFixed(2));
   DateTime selectedDateTime = DateTime.parse(tx.date);
+
+final List<String> withdrawalCategories = [
+  "Food", "Transport", "Entertainment", "Bills", "Personal Care", 
+  "Healthcare", "Education", "Debt Payments", "Shopping", "Travel", 
+  "Gifts & Holidays", "Charity & Donations", "Other"
+];
+final List<String> depositCategories = [
+  "Salary", "Investment", "Gift", "Other"
+];
+
+String? selectedCategory;
+
 
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: Color(0xFF3e3d3d),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)), // Rounded corners
-        title: Text("Edit Transaction", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-        content: SingleChildScrollView( // Prevents overflow
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Date Picker
-              GestureDetector(
-                onTap: () async {
-                  DateTime? pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDateTime,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                  );
-                  if (pickedDate != null) {
-                    selectedDateTime = DateTime(
-                      pickedDate.year,
-                      pickedDate.month,
-                      pickedDate.day,
-                      selectedDateTime.hour,
-                      selectedDateTime.minute,
-                    );
-                  }
+      // Wrap the dialog with StatefulBuilder to update its local state
+      return StatefulBuilder(
+        builder: (BuildContext context, void Function(void Function()) setStateDialog) {
+          return AlertDialog(
+            backgroundColor: Color(0xFF3e3d3d),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15)),
+            title: Text("Edit Transaction",
+                style: TextStyle(color: Colors.white)),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Date Picker
+                  GestureDetector(
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDateTime,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (pickedDate != null) {
+                        selectedDateTime = DateTime(
+                          pickedDate.year,
+                          pickedDate.month,
+                          pickedDate.day,
+                          selectedDateTime.hour,
+                          selectedDateTime.minute,
+                        );
+                        setStateDialog(() {});
+                      }
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 15),
+                      margin: EdgeInsets.only(bottom: 10),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF2c2c2e),
+                        borderRadius: BorderRadius.circular(10),
+                        border:
+                            Border.all(color: Colors.white24),
+                      ),
+                      child: Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Date: ${DateFormat('yyyy-MM-dd').format(selectedDateTime)}",
+                            style: TextStyle(
+                                color: Colors.white, fontSize: 16),
+                          ),
+                          Icon(Icons.calendar_today,
+                              color: Colors.white54, size: 18),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Time Picker
+                  GestureDetector(
+                    onTap: () => _showTimePicker(
+                        context, selectedDateTime, (newTime) {
+                      selectedDateTime = newTime;
+                      setStateDialog(() {});
+                    }),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 15),
+                      margin: EdgeInsets.only(bottom: 10),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF2c2c2e),
+                        borderRadius: BorderRadius.circular(10),
+                        border:
+                            Border.all(color: Colors.white24),
+                      ),
+                      child: Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Time: ${DateFormat('HH:mm').format(selectedDateTime)}",
+                            style: TextStyle(
+                                color: Colors.white, fontSize: 16),
+                          ),
+                          Icon(Icons.access_time,
+                              color: Colors.white54, size: 18),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Description Input
+                  TextField(
+                    controller: descController,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: "Description",
+                      labelStyle:
+                          TextStyle(color: Colors.grey),
+                      filled: true,
+                      fillColor: Color(0xFF2c2c2e),
+                      border: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  // Amount Input
+                  TextField(
+                    controller: amountController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: "Amount",
+                      labelStyle:
+                          TextStyle(color: Colors.grey),
+                      filled: true,
+                      fillColor: Color(0xFF2c2c2e),
+                      border: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () =>
+                    Navigator.of(context).pop(),
+                child: Text("Cancel",
+                    style:
+                        TextStyle(color: Colors.grey)),
+              ),
+              TextButton(
+                onPressed: () async {
+                  // Prepare updated values
+                  final updatedDate =
+                      DateFormat('yyyy-MM-dd HH:mm:ss')
+                          .format(selectedDateTime);
+                  final updatedDesc = descController.text;
+                  final updatedAmt = double.tryParse(
+                          amountController.text) ??
+                      tx.amount;
+
+                  // Update the transaction in the database
+                  await TransactionDB.updateTransaction(
+                      tx.id!, {
+                    'date': updatedDate,
+                    'description': updatedDesc,
+                    'amount': updatedAmt,
+                  });
+
+                  // Refresh the main transaction list
+                  await _loadTransactions();
+
+                  // Close the dialog
+                  Navigator.of(context).pop();
                 },
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                  margin: EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF2c2c2e),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Date: ${DateFormat('yyyy-MM-dd').format(selectedDateTime)}",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                      Icon(Icons.calendar_today, color: Colors.white54, size: 18),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Time Picker
-              GestureDetector(
-                onTap: () => _showTimePicker(context, selectedDateTime, (newTime) {
-                  selectedDateTime = newTime;
-                }),
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                  margin: EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF2c2c2e),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Time: ${DateFormat('HH:mm').format(selectedDateTime)}",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                      Icon(Icons.access_time, color: Colors.white54, size: 18),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Description Input
-              TextField(
-                controller: descController,
-                style: TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: "Description",
-                  labelStyle: TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Color(0xFF2c2c2e),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
-
-              SizedBox(height: 10),
-
-              // Amount Input
-              TextField(
-                controller: amountController,
-                keyboardType: TextInputType.number,
-                style: TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: "Amount",
-                  labelStyle: TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Color(0xFF2c2c2e),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                ),
+                child: Text("Save",
+                    style: TextStyle(color: Colors.blue)),
               ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text("Cancel", style: TextStyle(color: Colors.grey, fontSize: 16)),
-          ),
-          TextButton(
-            onPressed: () async {
-              await TransactionDB.updateTransaction(tx.id!, {
-                'date': DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDateTime),
-                'description': descController.text,
-                'amount': double.tryParse(amountController.text) ?? tx.amount,
-              });
-              _loadTransactions(); // Refresh UI
-              Navigator.of(context).pop();
-            },
-            child: Text("Save", style: TextStyle(color: Colors.blue, fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-        ],
+          );
+        },
       );
     },
   );
