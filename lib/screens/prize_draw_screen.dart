@@ -27,7 +27,7 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
     }
   }
 
-  // Helper function to build a badge item with a progress bar.
+  // Helper function to build a badge item with a progress bar placed above the badge icon.
   Widget buildBadge(String name, String description, double progress) {
     return Container(
       width: 120,
@@ -35,6 +35,20 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Progress bar moved above the icon.
+          Container(
+            height: 8,
+            width: double.infinity,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.grey[800],
+                valueColor: AlwaysStoppedAnimation<Color>(_getProgressColor(progress)),
+              ),
+            ),
+          ),
+          SizedBox(height: 8),
           // Placeholder icon for the badge.
           Icon(
             Icons.emoji_events,
@@ -60,20 +74,6 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 4),
-          // Progress bar for the badge with rounded corners.
-          Container(
-            height: 8,
-            width: double.infinity,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(4), // Adjust corner radius as needed
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.grey[800],
-                valueColor: AlwaysStoppedAnimation<Color>(_getProgressColor(progress)),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -91,7 +91,6 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
               // Slot Machine Widget at the top.
               SlotMachineWidget(
                 onWin: _handleWin,
-                initialCredits: 100,
               ),
               SizedBox(height: 20),
               // "Badges" section title.
@@ -118,11 +117,11 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      buildBadge("Beginner", "First spin bonus", 0.2),
-                      buildBadge("Lucky", "Hit a jackpot once", 0.5),
-                      buildBadge("Veteran", "Played 100 spins", 0.8),
-                      buildBadge("Champion", "Winnings > 1000", 1.0),
-                      buildBadge("Master", "Mastered the slots", 0.9),
+                      buildBadge("First Place", "Have the highest score at the end of the month", 1.0),
+                      buildBadge("Consistent", "Log your expenses every day for a month", 0.67),
+                      buildBadge("Debt Demolisher", "Pay off your debts. Consistency is key", 0.34),
+                      buildBadge("Achiever", "Achieve your savings goals", 0.2),
+                      buildBadge("Gambler", "Spin the slots 1000 times", 0.1),
                     ],
                   ),
                 ),
