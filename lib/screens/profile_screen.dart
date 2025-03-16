@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:technik/globals.dart';
 import 'package:technik/widgets/custom_popup.dart';
 // import 'package:technik/widgets/friends_list.dart' hide Friend;
@@ -11,7 +13,6 @@ import 'package:technik/data/notification_preferences_data.dart';
 import 'package:technik/widgets/subscription_list.dart';
 import 'package:technik/data/subscription_data.dart';
 import 'package:technik/widgets/add_goal_form.dart';
-import 'package:technik/screens/bank_statements_screen.dart';
 import '../widgets/header_widget.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
@@ -23,14 +24,12 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   // List of goals that can be updated when a new goal is added
   List<Goal> _goals = [];
-  List<Friend> friends = []; // ✅ Define state variable
 
   @override
   void initState() {
     super.initState();
     // Initialize with sample goals
     _goals = GoalsData.getSampleGoals();
-    friends = FriendsData.getSampleFriends(); // ✅ Initialize with sample data
   }
   
   //final String userName = "John Johnson";
@@ -47,26 +46,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
               //HeaderWidget(userName: userName),
               SizedBox(height: 60),
               // Profile Picture
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Color(0xFF3c3c3e),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: ClipOval(
-                    child: Container(
-                      width: 90,
-                      height: 90,
-                      color: Colors.pink[50],
-                      child: Icon(
-                        Icons.person,
-                        size: 60,
-                        color: Colors.black54,
+              GestureDetector(
+                onTap: _pickImage,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF3c3c3e),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: ClipOval(
+                          child: Container(
+                            width: 90,
+                            height: 90,
+                            color: profileImagePath == null ? Colors.pink[50] : null,
+                            child: profileImagePath == null 
+                                ? _buildDefaultProfileIcon() 
+                                : _buildProfileImage(),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF4CD964),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.camera_alt,
+                          color: Colors.black,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               SizedBox(height: 20),
@@ -394,34 +414,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         TextButton(
           onPressed: () {
             Navigator.of(context).pop();
-            // Show a message that subscriptions settings are saved
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Subscription preferences saved"),
-                backgroundColor: Color(0xFF4CD964),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
           },
           child: Text(
-            "Save",
-            style: TextStyle(color: Color(0xFF4CD964)),
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-            // Here you could navigate to a 'Add Subscription' screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Add subscription feature coming soon!"),
-                backgroundColor: Color(0xFF4CD964),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          },
-          child: Text(
-            "Add New",
+            "Close",
             style: TextStyle(color: Color(0xFF4CD964)),
           ),
         ),
@@ -541,99 +536,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showFinancialHealthPopup(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: Color(0xFF2c2c2e), // Dark mode background
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "Financial Health",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 20),
-
-            // Circular Indicator
-            CircularPercentIndicator(
-              radius: 70.0,
-              lineWidth: 10.0,
-              percent: 0.35, // 35% financial health
-              center: Text(
-                "35%",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              progressColor: Colors.yellowAccent,
-              backgroundColor: Colors.white24,
-              circularStrokeCap: CircularStrokeCap.round,
-            ),
-
-            SizedBox(height: 10),
-            Text(
-              "Basic Level",
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-              ),
-            ),
-
-            Divider(color: Colors.white24, height: 30),
-
-            // Financial Categories Breakdown
-            _buildFinancialHealthItem(Icons.shopping_cart, "Expenses", "50%", "You spent less than you earned."),
-            _buildFinancialHealthItem(Icons.savings, "Savings", "0%", "Start building your savings."),
-            _buildFinancialHealthItem(Icons.trending_up, "Investments", "0%", "Get your first portfolio recommendation."),
-            _buildFinancialHealthItem(Icons.security, "Protection", "0%", "You have no emergency fund."),
-          ],
-        ),
-      );
-    },
-  );
-}
-
-// Function to Build Each Financial Item
-Widget _buildFinancialHealthItem(IconData icon, String title, String value, String description) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8.0),
-    child: Row(
-      children: [
-        Icon(icon, color: Colors.white70, size: 20),
-        SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "$title – $value",
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              description,
-              style: TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
-
-
   void _showFriendsPopup(BuildContext context) {
-    // Get sample friends data
-    final friends = FriendsData.getSampleFriends();
+    // Use the global friends list instead of sample data
+    final friends = userFriends;
 
     // Show the custom popup with friends list
     CustomPopup.show(
@@ -648,9 +553,48 @@ Widget _buildFinancialHealthItem(IconData icon, String title, String value, Stri
           // Show a snackbar to demonstrate the action
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Selected friend: ${friend.name}"),
+              content: Text("Selected username: @${friend.name}"),
               backgroundColor: Color(0xFF4CD964), // Green color
               behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+        onFriendRemoved: (friend) async {
+          // Remove the friend from the global list
+          await removeFriend(friend);
+          
+          // Update UI
+          setState(() {});
+          
+          // Show a snackbar to confirm removal
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("@${friend.name} removed from your friends list"),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(
+                label: 'UNDO',
+                textColor: Colors.white,
+                onPressed: () async {
+                  // Add the friend back if user taps undo
+                  await addFriend(friend);
+                  
+                  // Update UI
+                  setState(() {});
+                  
+                  // Show the friends list with the restored friend
+                  _showFriendsPopup(context);
+                  
+                  // Show confirmation
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("@${friend.name} added back to your friends list"),
+                      backgroundColor: Color(0xFF4CD964),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
             ),
           );
         },
@@ -659,14 +603,8 @@ Widget _buildFinancialHealthItem(IconData icon, String title, String value, Stri
         TextButton(
           onPressed: () {
             Navigator.of(context).pop();
-            // Here you could navigate to a 'Add Friend' screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Add friend feature coming soon!"),
-                backgroundColor: Color(0xFF4CD964), // Green color
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            // Show the Add Friend form
+            _showAddFriendForm(context);
           },
           child: Text(
             "Add Friend",
@@ -888,5 +826,4 @@ void _showAddFriendPopup(BuildContext context) {
       ),
     );
   }
-
 }

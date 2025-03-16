@@ -293,7 +293,7 @@ class _AdvisorScreenState extends State<AdvisorScreen> {
           SizedBox(width: 8),
           Container(
             decoration: BoxDecoration(
-              color: Colors.blue[700],
+              color: Color(0xFF50c878),
               shape: BoxShape.circle,
             ),
             child: IconButton(
