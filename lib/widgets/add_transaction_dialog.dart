@@ -20,7 +20,16 @@ class AddTransactionDialog extends StatefulWidget {
 class _AddTransactionDialogState extends State<AddTransactionDialog> {
   final TextEditingController descController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
+  final TextEditingController customCategoryController = TextEditingController();
   DateTime selectedDateTime = DateTime.now();
+
+  // New state variables for the dropdown fields.
+  String? selectedCategory;
+  String? selectedOperation = "Withdrawal"; // Default value.
+
+  // Dropdown options.
+  final List<String> categoryOptions = ["Food", "Transport", "Entertainment", "Bills", "Other"];
+  final List<String> operationOptions = ["Withdrawal", "Income"];
 
   Future<void> _showDatePicker() async {
     DateTime? pickedDate = await showDatePicker(
@@ -87,10 +96,10 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     );
   }
 
+  // Build picker field without internal margin.
   Widget _buildPickerField(String label, String value, IconData icon) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Color(0xFF2c2c2e),
         borderRadius: BorderRadius.circular(10),
@@ -121,11 +130,48 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     );
   }
 
+  // Build a full-width dropdown.
+  Widget _buildDropdownField(String label, String? selectedValue, List<String> items, ValueChanged<String?> onChanged) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      decoration: BoxDecoration(
+        color: Color(0xFF2c2c2e),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isExpanded: true,
+          value: selectedValue,
+          hint: Text(label, style: TextStyle(color: Colors.white, fontSize: 16)),
+          icon: Icon(Icons.arrow_drop_down, color: Colors.white54),
+          dropdownColor: Color(0xFF2c2c2e),
+          items: items.map((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value, style: TextStyle(color: Colors.white, fontSize: 16)),
+            );
+          }).toList(),
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+
   Widget _buildDialogButton(String text, Color color, VoidCallback onPressed) {
     return TextButton(
       onPressed: onPressed,
       child: Text(text, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
     );
+  }
+
+  @override
+  void dispose() {
+    descController.dispose();
+    amountController.dispose();
+    customCategoryController.dispose();
+    super.dispose();
   }
 
   @override
@@ -146,11 +192,30 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                 onTap: _showDatePicker,
                 child: _buildPickerField("Date", DateFormat('yyyy-MM-dd').format(selectedDateTime), Icons.calendar_today),
               ),
+              SizedBox(height: 10),
               GestureDetector(
                 onTap: _showTimePicker,
                 child: _buildPickerField("Time", DateFormat('HH:mm').format(selectedDateTime), Icons.access_time),
               ),
+              SizedBox(height: 10),
+              _buildDropdownField("Category", selectedCategory, categoryOptions, (newValue) {
+                setState(() {
+                  selectedCategory = newValue;
+                });
+              }),
+              if (selectedCategory == "Other") ...[
+                SizedBox(height: 10),
+                _buildTextField(customCategoryController, "Custom Category"),
+              ],
+              SizedBox(height: 10),
+              _buildDropdownField("Operation Type", selectedOperation, operationOptions, (newValue) {
+                setState(() {
+                  selectedOperation = newValue;
+                });
+              }),
+              SizedBox(height: 10),
               _buildTextField(descController, "Description"),
+              SizedBox(height: 10),
               _buildTextField(amountController, "Amount", isNumeric: true),
             ],
           ),
@@ -171,6 +236,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
             return;
           }
 
+          // Backend is not updated for the new fields yet.
           final newTx = Transaction(
             date: DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDateTime),
             description: descController.text,

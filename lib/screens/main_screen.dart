@@ -141,7 +141,7 @@ class _MainScreenState extends State<MainScreen> {
                 width: widgetWidth,
                 height: 100,
                 cornerRadius: 45,
-                color: Color(0xFF4CD964),
+                color: Color(0xFF50c878),
                 onTap: () => showAddTransactionDialog(context),
                 child: Center(
                   child: Text(
