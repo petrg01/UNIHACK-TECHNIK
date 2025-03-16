@@ -25,27 +25,32 @@ class _LineChartWidgetState extends State<LineChartWidget> {
     });
   }
 
-  /// Fetches transactions from the database, groups them by month, and computes totals.
+  /// Fetches transactions from the database, filters expenses, groups them by month, and computes totals.
   Future<void> fetchChartData() async {
-    // Get transactions from DB (assumes date is stored as "YYYY-MM-DD HH:mm:ss")
     final List<Map<String, dynamic>> txMaps = await TransactionDB.getTransactions();
-    // Create a list for monthly totals for 12 months (index 0 = Jan, index 11 = Dec)
+
+    // Create a list for monthly totals (Jan = index 0, Dec = index 11)
     List<double> monthlyTotals = List.filled(12, 0.0);
 
     for (var txMap in txMaps) {
       try {
         DateTime date = DateFormat('yyyy-MM-dd HH:mm:ss').parse(txMap['date']);
-        int monthIndex = date.month - 1; // Month 1 (Jan) becomes index 0
+        int monthIndex = date.month - 1; // Convert month to index (Jan = 0)
+
         double amount = (txMap['amount'] is int)
             ? (txMap['amount'] as int).toDouble()
             : txMap['amount'];
-        monthlyTotals[monthIndex] += amount;
+
+        // Only consider transactions where amount is negative (expenses)
+        if (amount < 0) {
+          monthlyTotals[monthIndex] += amount.abs(); // Take absolute value
+        }
       } catch (e) {
         print('Error parsing transaction: $e');
       }
     }
 
-    // Create chart spots for each month based on the computed totals.
+    // Create chart spots for each month based on computed totals.
     List<FlSpot> spots = List.generate(12, (index) {
       return FlSpot(index.toDouble(), monthlyTotals[index]);
     });
@@ -62,18 +67,13 @@ class _LineChartWidgetState extends State<LineChartWidget> {
         ? finalSpots
         : List.generate(12, (index) => FlSpot(index.toDouble(), 0));
 
-    // Optionally compute dynamic minY and maxY from the data (or use fixed values if preferred).
-    double computedMinY = 500;
-    double computedMaxY = 1200;
+    // Dynamically compute min/max Y values from the data.
+    double computedMinY = 0;
+    double computedMaxY = 1000; // Default max
     if (finalSpots.isNotEmpty) {
-      computedMinY = finalSpots.map((s) => s.y).reduce(min);
       computedMaxY = finalSpots.map((s) => s.y).reduce(max);
-      // Add a little margin to the computed values.
-      double margin = (computedMaxY - computedMinY) * 0.1;
-      computedMinY = computedMinY - margin;
-      computedMaxY = computedMaxY + margin;
-      // Ensure minY is not less than zero.
-      computedMinY = computedMinY < 0 ? 0 : computedMinY;
+      double margin = computedMaxY * 0.1; // 10% margin
+      computedMaxY += margin;
     }
 
     return LineChart(
@@ -105,18 +105,8 @@ class _LineChartWidgetState extends State<LineChartWidget> {
               showTitles: true,
               getTitlesWidget: (value, meta) {
                 const months = [
-                  'Jan',
-                  'Feb',
-                  'Mar',
-                  'Apr',
-                  'May',
-                  'Jun',
-                  'Jul',
-                  'Aug',
-                  'Sep',
-                  'Oct',
-                  'Nov',
-                  'Dec'
+                  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
                 ];
                 return Padding(
                   padding: EdgeInsets.only(top: 5),
