@@ -97,8 +97,8 @@ class FriendsList extends StatelessWidget {
   // Background widget shown when swiping the item
   Widget _buildDismissibleBackground() {
     return Container(
-      alignment: Alignment.centerRight,
-      padding: EdgeInsets.only(right: 20.0),
+      margin: EdgeInsets.only(bottom: 12), // Match the margin of the friend item
+      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16), // Match the padding of the friend item
       decoration: BoxDecoration(
         color: Colors.red,
         borderRadius: BorderRadius.circular(12),
@@ -167,11 +167,7 @@ class FriendsList extends StatelessWidget {
                 ),
               ),
             ),
-            // Chevron icon
-            Icon(
-              Icons.chevron_right,
-              color: Colors.white54,
-            ),
+            // Removed chevron icon
           ],
         ),
       ),
