@@ -17,11 +17,17 @@ class _MainScreenState extends State<MainScreen> {
   bool showPieChartAnimation = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Print the global points variable to the terminal every time the page is opened.
+    print("Global points: $points");
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Calculate a widget width matching the TransactionsScreen style.
-    // Assuming 8 pixels padding on each side (total 16 pixels).
+    // Calculate widget width based on screen width and horizontal padding
     final double screenWidth = MediaQuery.of(context).size.width;
-    final double widgetWidth = screenWidth - 16;
+    final double widgetWidth = screenWidth - 16; // 8px padding each side
 
     return Scaffold(
       backgroundColor: Color(0xFF2c2c2e),
