@@ -115,18 +115,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             width: 90,
                             height: 90,
                             color: profileImagePath == null ? Colors.pink[50] : null,
-                            child: profileImagePath == null
-                                ? Icon(
-                                    Icons.person,
-                                    size: 60,
-                                    color: Colors.black54,
-                                  )
-                                : Image.file(
-                                    File(profileImagePath!),
-                                    fit: BoxFit.cover,
-                                    width: 90,
-                                    height: 90,
-                                  ),
+                            child: profileImagePath == null 
+                                ? _buildDefaultProfileIcon() 
+                                : _buildProfileImage(),
                           ),
                         ),
                       ),
@@ -661,6 +652,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Helper method to build the default profile icon
+  Widget _buildDefaultProfileIcon() {
+    return Icon(
+      Icons.person,
+      size: 60,
+      color: Colors.black54,
+    );
+  }
+  
+  // Helper method to build the profile image with error handling
+  Widget _buildProfileImage() {
+    final file = File(profileImagePath!);
+    
+    // Check if file exists
+    if (!file.existsSync()) {
+      // If file doesn't exist, reset the path and return default icon
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          profileImagePath = null;
+        });
+      });
+      return _buildDefaultProfileIcon();
+    }
+    
+    // Otherwise try to load the image with error handling
+    return Image.file(
+      file,
+      fit: BoxFit.cover,
+      width: 90,
+      height: 90,
+      errorBuilder: (context, error, stackTrace) {
+        // If there's an error loading the image, log it and return default icon
+        print('Error loading profile image: $error');
+        
+        // Reset path on next frame to avoid repeated errors
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            profileImagePath = null;
+          });
+        });
+        
+        return _buildDefaultProfileIcon();
+      },
     );
   }
 }
