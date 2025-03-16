@@ -406,39 +406,83 @@ void _showTimePicker(BuildContext context, DateTime selectedDateTime, Function(D
 void _showEditDialog(BuildContext context, Transaction tx) {
   TextEditingController descController =
       TextEditingController(text: tx.description);
-  TextEditingController amountController =
-      TextEditingController(text: tx.amount.toStringAsFixed(2));
+
   DateTime selectedDateTime = DateTime.parse(tx.date);
 
-final List<String> withdrawalCategories = [
-  "Food", "Transport", "Entertainment", "Bills", "Personal Care", 
-  "Healthcare", "Education", "Debt Payments", "Shopping", "Travel", 
-  "Gifts & Holidays", "Charity & Donations", "Other"
-];
-final List<String> depositCategories = [
-  "Salary", "Investment", "Gift", "Other"
-];
+  final List<String> withdrawalCategories = [
+    "Food", "Transport", "Entertainment", "Bills", "Personal Care",
+    "Healthcare", "Education", "Debt Payments", "Shopping", "Travel",
+    "Gifts & Holidays", "Charity & Donations", "Other"
+  ];
 
-String? selectedCategory;
+  final List<String> depositCategories = [
+    "Salary", "Investment", "Gift", "Other"
+  ];
 
+  bool isWithdrawal = tx.amount < 0;
+  String transactionType = isWithdrawal ? "Withdrawal" : "Deposit";
+  String selectedCategory = (tx.category != null && tx.category!.isNotEmpty)
+      ? tx.category!
+      : (isWithdrawal ? withdrawalCategories[0] : depositCategories[0]);
+
+  TextEditingController amountEditingController =
+      TextEditingController(text: tx.amount.abs().toString());
 
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      // Wrap the dialog with StatefulBuilder to update its local state
       return StatefulBuilder(
-        builder: (BuildContext context, void Function(void Function()) setStateDialog) {
+        builder: (context, setStateDialog) {
           return AlertDialog(
             backgroundColor: Color(0xFF3e3d3d),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15)),
-            title: Text("Edit Transaction",
-                style: TextStyle(color: Colors.white)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            title: Text("Edit Transaction", style: TextStyle(color: Colors.white)),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Date Picker
+                  // Transaction Type (Withdrawal or Deposit)
+                  DropdownButtonFormField<String>(
+                    value: transactionType,
+                    dropdownColor: Color(0xFF2c2c2e),
+                    items: ["Withdrawal", "Deposit"].map((type) => DropdownMenuItem(
+                      value: type,
+                      child: Text(type, style: TextStyle(color: Colors.white)),
+                    )).toList(),
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        transactionType = value!;
+                        selectedCategory = transactionType == "Withdrawal"
+                            ? withdrawalCategories[0]
+                            : depositCategories[0];
+                      });
+                    },
+                  ),
+
+                  SizedBox(height: 10),
+
+                  // Category Selection
+                  DropdownButtonFormField<String>(
+                    dropdownColor: Color(0xFF3e3d3d),
+                    value: selectedCategory,
+                    items: (transactionType == "Withdrawal"
+                            ? withdrawalCategories
+                            : depositCategories)
+                        .map((String category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category, style: TextStyle(color: Colors.white)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        selectedCategory = value!;
+                      });
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  // Date selector
                   GestureDetector(
                     onTap: () async {
                       DateTime? pickedDate = await showDatePicker(
@@ -448,146 +492,72 @@ String? selectedCategory;
                         lastDate: DateTime(2100),
                       );
                       if (pickedDate != null) {
-                        selectedDateTime = DateTime(
-                          pickedDate.year,
-                          pickedDate.month,
-                          pickedDate.day,
-                          selectedDateTime.hour,
-                          selectedDateTime.minute,
-                        );
-                        setStateDialog(() {});
+                        setStateDialog(() => selectedDateTime = pickedDate);
                       }
                     },
                     child: Container(
-                      padding: EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 15),
+                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                       margin: EdgeInsets.only(bottom: 10),
                       decoration: BoxDecoration(
                         color: Color(0xFF2c2c2e),
                         borderRadius: BorderRadius.circular(10),
-                        border:
-                            Border.all(color: Colors.white24),
                       ),
                       child: Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "Date: ${DateFormat('yyyy-MM-dd').format(selectedDateTime)}",
-                            style: TextStyle(
-                                color: Colors.white, fontSize: 16),
-                          ),
-                          Icon(Icons.calendar_today,
-                              color: Colors.white54, size: 18),
+                          Text("Date: ${DateFormat('yyyy-MM-dd').format(selectedDateTime)}", style: TextStyle(color: Colors.white)),
+                          Icon(Icons.calendar_today, color: Colors.white54),
                         ],
                       ),
                     ),
                   ),
-                  // Time Picker
-                  GestureDetector(
-                    onTap: () => _showTimePicker(
-                        context, selectedDateTime, (newTime) {
-                      selectedDateTime = newTime;
-                      setStateDialog(() {});
-                    }),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 15),
-                      margin: EdgeInsets.only(bottom: 10),
-                      decoration: BoxDecoration(
-                        color: Color(0xFF2c2c2e),
-                        borderRadius: BorderRadius.circular(10),
-                        border:
-                            Border.all(color: Colors.white24),
-                      ),
-                      child: Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Time: ${DateFormat('HH:mm').format(selectedDateTime)}",
-                            style: TextStyle(
-                                color: Colors.white, fontSize: 16),
-                          ),
-                          Icon(Icons.access_time,
-                              color: Colors.white54, size: 18),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Description Input
+                  SizedBox(height: 10),
+                  // Description input
                   TextField(
                     controller: descController,
                     style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: "Description",
-                      labelStyle:
-                          TextStyle(color: Colors.grey),
+                      labelStyle: TextStyle(color: Colors.white54),
                       filled: true,
                       fillColor: Color(0xFF2c2c2e),
-                      border: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(10),
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                   SizedBox(height: 10),
-                  // Amount Input
+                  // Amount input
                   TextField(
-                    controller: amountController,
-                    keyboardType: TextInputType.number,
+                    controller: amountEditingController,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
                     style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: "Amount",
-                      labelStyle:
-                          TextStyle(color: Colors.grey),
-                      filled: true,
-                      fillColor: Color(0xFF2c2c2e),
-                      border: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(10),
-                      ),
+                      labelStyle: TextStyle(color: Colors.white),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
-                  
                 ],
               ),
             ),
             actions: [
               TextButton(
-                onPressed: () =>
-                    Navigator.of(context).pop(),
-                child: Text("Cancel",
-                    style:
-                        TextStyle(color: Colors.grey)),
+                child: Text("Cancel", style: TextStyle(color: Colors.grey)),
+                onPressed: () => Navigator.pop(context),
               ),
               TextButton(
+                child: Text("Save", style: TextStyle(color: Colors.blue)),
                 onPressed: () async {
-                  // Prepare updated values
-                  final updatedDate =
-                      DateFormat('yyyy-MM-dd HH:mm:ss')
-                          .format(selectedDateTime);
-                  final updatedDesc = descController.text;
-                  final updatedAmt = double.tryParse(
-                          amountController.text) ??
-                      tx.amount;
-
-                  // Update the transaction in the database
-                  await TransactionDB.updateTransaction(
-                      tx.id!, {
-                    'date': updatedDate,
-                    'description': updatedDesc,
-                    'amount': updatedAmt,
+                  double amount = double.parse(amountEditingController.text);
+                  amount = transactionType == "Withdrawal" ? -amount.abs() : amount.abs();
+                  await TransactionDB.updateTransaction(tx.id!, {
+                    'date': DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDateTime),
+                    'description': descController.text,
+                    'amount': amount,
+                    'category': selectedCategory,
                   });
-
-                  // Refresh the main transaction list
                   await _loadTransactions();
-
-                  // Close the dialog
-                  Navigator.of(context).pop();
+                  Navigator.pop(context);
                 },
-                child: Text("Save",
-                    style: TextStyle(color: Colors.blue)),
               ),
             ],
           );

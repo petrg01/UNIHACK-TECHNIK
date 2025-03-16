@@ -10,20 +10,30 @@ class TransactionDB {
     return _database!;
   }
 
-  static Future<Database> initDB() async {
+    static Future<Database> initDB() async {
     String path = join(await getDatabasesPath(), 'transactions.db');
-    return openDatabase(path, version: 1, onCreate: (Database db, int version) async {
-      await db.execute('''
-        CREATE TABLE transactions (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          date TEXT,  -- Stores date & time in "YYYY-MM-DD HH:mm:ss"
-          description TEXT,
-          amount REAL,
-          category TEXT
-        )
-      ''');
-    });
+    return openDatabase(
+      path,
+      version: 2, // <-- Incremented database version
+      onCreate: (Database db, int version) async {
+        await db.execute('''
+          CREATE TABLE transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT,
+            description TEXT,
+            amount REAL,
+            category TEXT
+          )
+        ''');
+      },
+      onUpgrade: (Database db, int oldVersion, int newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('ALTER TABLE transactions ADD COLUMN category TEXT');
+        }
+      },
+    );
   }
+
 
   static Future<void> insertTransaction(Map<String, dynamic> transaction) async {
     final db = await database;

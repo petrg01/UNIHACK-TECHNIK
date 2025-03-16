@@ -184,62 +184,79 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Color(0xFF3e3d3d),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      title: Text(
-        "Add Transaction",
-        style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-      ),
-      content: SingleChildScrollView(
-        child: IntrinsicHeight(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GestureDetector(
-                onTap: _showDatePicker,
-                child: _buildPickerField("Date", DateFormat('yyyy-MM-dd').format(selectedDateTime), Icons.calendar_today),
-              ),
-              SizedBox(height: 10),
-              GestureDetector(
-                onTap: _showTimePicker,
-                child: _buildPickerField("Time", DateFormat('HH:mm').format(selectedDateTime), Icons.access_time),
-              ),
-              SizedBox(height: 10),
-              _buildDropdownField("Operation Type", selectedOperation, operationOptions, (newValue) {
+Widget build(BuildContext context) {
+  return AlertDialog(
+    backgroundColor: Color(0xFF3e3d3d),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+    title: Text(
+      "Add Transaction",
+      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+    ),
+    content: SingleChildScrollView(
+      child: IntrinsicHeight(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GestureDetector(
+              onTap: _showDatePicker,
+              child: _buildPickerField("Date", DateFormat('yyyy-MM-dd').format(selectedDateTime), Icons.calendar_today),
+            ),
+            SizedBox(height: 10),
+            GestureDetector(
+              onTap: _showTimePicker,
+              child: _buildPickerField("Time", DateFormat('HH:mm').format(selectedDateTime), Icons.access_time),
+            ),
+            SizedBox(height: 10),
+            _buildDropdownField("Operation Type", selectedOperation, operationOptions, (newValue) {
+              setState(() {
+                selectedOperation = newValue;
+                selectedCategory = null; // Reset category when operation changes
+              });
+            }),
+            SizedBox(height: 10),
+            _buildDropdownField(
+              "Category",
+              selectedCategory,
+              selectedOperation == "Withdrawal" ? withdrawalCategories : depositCategories,
+              (newValue) {
                 setState(() {
-                  selectedOperation = newValue;
-                  selectedCategory = null; // Reset category when operation changes
+                  selectedCategory = newValue;
                 });
-              }),
+              },
+            ),
+            if (selectedCategory == "Other") ...[
               SizedBox(height: 10),
-              _buildDropdownField(
-                "Category",
-                selectedCategory,
-                selectedOperation == "Withdrawal" ? withdrawalCategories : depositCategories,
-                (newValue) {
-                  setState(() {
-                    selectedCategory = newValue;
-                  });
-                },
-              ),
-              if (selectedCategory == "Other") ...[
-                SizedBox(height: 10),
-                _buildTextField(customCategoryController, "Custom Category"),
-              ],
-              SizedBox(height: 10),
-              _buildTextField(descController, "Description"),
-              SizedBox(height: 10),
-              _buildTextField(amountController, "Amount", isNumeric: true),
+              _buildTextField(customCategoryController, "Custom Category"),
             ],
-          ),
+            SizedBox(height: 10),
+            _buildTextField(descController, "Description"),
+            SizedBox(height: 10),
+            _buildTextField(amountController, "Amount", isNumeric: true),
+          ],
         ),
       ),
-      actions: [
-        _buildDialogButton("Cancel", Colors.white70, () => Navigator.of(context).pop()),
-        _buildDialogButton("Save", Color(0xFF4CD964), () {}),
-      ],
-    );
-  }
+    ),
+    actions: [
+      _buildDialogButton("Cancel", Colors.white70, () => Navigator.of(context).pop()),
+      _buildDialogButton("Save", Color(0xFF4caf50), () async {
+        final double enteredAmount = double.tryParse(amountController.text) ?? 0.0;
+        final double amount = selectedOperation == "Withdrawal" ? -enteredAmount.abs() : enteredAmount.abs();
+
+        final newTransaction = Transaction(
+          date: DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDateTime),
+          description: descController.text,
+          amount: amount,
+          category: selectedCategory == "Other"
+              ? customCategoryController.text
+              : selectedCategory ?? (selectedOperation == "Withdrawal" ? withdrawalCategories[0] : depositCategories[0]),
+        );
+
+        await TransactionDB.insertTransaction(newTransaction.toMap());
+
+        Navigator.of(context).pop();
+      }),
+    ],
+  );
+}
+
 }
