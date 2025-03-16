@@ -26,18 +26,23 @@ class _PieChartWidgetState extends State<PieChartWidget> {
     });
   }
 
-  /// Fetch transactions from the database, group them by description,
+  /// Fetch transactions from the database, filter for expenses, group them by category,
   /// and compute the total amount for each category.
   Future<void> fetchChartData() async {
     final List<Map<String, dynamic>> txMaps = await TransactionDB.getTransactions();
-    // Group transactions by description.
+
+    // Group transactions by category.
     Map<String, double> categoryTotals = {};
     for (var tx in txMaps) {
-      String desc = tx['description'];
+      String category = tx['category'] ?? "Other"; // Default to "Other" if null
       double amount = (tx['amount'] is int)
           ? (tx['amount'] as int).toDouble()
           : tx['amount'];
-      categoryTotals[desc] = (categoryTotals[desc] ?? 0) + amount;
+
+      // Only process negative amounts (expenses)
+      if (amount < 0) {
+        categoryTotals[category] = (categoryTotals[category] ?? 0) + amount.abs();
+      }
     }
 
     // Predefined fixed colors (cycle through if there are more categories)
