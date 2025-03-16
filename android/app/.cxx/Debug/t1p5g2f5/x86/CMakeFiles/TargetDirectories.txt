@@ -1,0 +1,2 @@
+C:/Users/Sam/Documents/GitHub/NewVersion/UNIHACK-TECHNIK_3/android/app/.cxx/Debug/t1p5g2f5/x86/CMakeFiles/edit_cache.dir
+C:/Users/Sam/Documents/GitHub/NewVersion/UNIHACK-TECHNIK_3/android/app/.cxx/Debug/t1p5g2f5/x86/CMakeFiles/rebuild_cache.dir
