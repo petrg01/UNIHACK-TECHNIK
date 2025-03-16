@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:technik/globals.dart';
@@ -317,9 +319,10 @@ void _showFullTransactionList(BuildContext context, String date, List<Transactio
                             return false;
                           } else if (direction == DismissDirection.startToEnd) {
                             // Edit case
-                            _showEditDialog(context, tx);
-                            // Refresh the dialog state after edit
-                            setStateDialog(() {});
+                            _showEditDialog(context, tx, () async {
+                                    await _loadTransactions(); // Explicitly reload transactions
+                                    setStateDialog(() {});     // Refresh the list dialog after editing
+                                  });
                             return false;
                           }
                           return false;
@@ -352,58 +355,7 @@ void _showFullTransactionList(BuildContext context, String date, List<Transactio
 }
 
 
-
-void _showTimePicker(BuildContext context, DateTime selectedDateTime, Function(DateTime) onTimeSelected) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true, // Prevents overflow
-    backgroundColor: Colors.transparent, // Makes UI smoother
-    builder: (BuildContext builder) {
-      return Container(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        decoration: BoxDecoration(
-          color: Color(0xFF2c2c2e), // Dark theme background
-          borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-        ),
-        child: Wrap( // Allows automatic resizing
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: 180, // Prevents layout issues
-                    child: CupertinoDatePicker(
-                      mode: CupertinoDatePickerMode.time,
-                      initialDateTime: selectedDateTime,
-                      use24hFormat: true,
-                      onDateTimeChanged: (DateTime newTime) {
-                        onTimeSelected(DateTime(
-                          selectedDateTime.year,
-                          selectedDateTime.month,
-                          selectedDateTime.day,
-                          newTime.hour,
-                          newTime.minute,
-                        ));
-                      },
-                    ),
-                  ),
-                  CupertinoButton(
-                    child: Text("Done", style: TextStyle(color: Colors.blue, fontSize: 18, fontWeight: FontWeight.bold)),
-                    onPressed: () => Navigator.of(context).pop(),
-                  )
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
-void _showEditDialog(BuildContext context, Transaction tx) {
+void _showEditDialog(BuildContext context, Transaction tx, VoidCallback onTransactionUpdated) {
   TextEditingController descController =
       TextEditingController(text: tx.description);
 
@@ -555,8 +507,10 @@ void _showEditDialog(BuildContext context, Transaction tx) {
                     'amount': amount,
                     'category': selectedCategory,
                   });
-                  await _loadTransactions();
+    
                   Navigator.pop(context);
+                  await _loadTransactions();  // <-- Explicitly reload transactions here
+                  onTransactionUpdated();     // <-- callback
                 },
               ),
             ],
