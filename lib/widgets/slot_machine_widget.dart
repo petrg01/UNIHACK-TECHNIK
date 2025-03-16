@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import '../globals.dart';
-import 'dart:async';
 import 'dart:math';
-
-import 'package:technik/widgets/header_widget.dart';
 
 class SlotMachineWidget extends StatefulWidget {
   final Function(int) onWin;
-  // initialCredits parameter is no longer used since we rely on global points.
+
   const SlotMachineWidget({
     Key? key,
     required this.onWin,
@@ -21,21 +18,15 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
   final List<String> symbols = ['🍒', '🍋', '🍊', '🍇', '🔔', '💎', '7️⃣'];
   final int reelCount = 3;
   
-  // For smooth spinning animation
   List<List<String>> reelStrips = [];
   List<ScrollController> scrollControllers = [];
   List<AnimationController> animControllers = [];
-  List<Animation<double>> animations = [];
-  
-  // Final landing positions for each reel
   List<List<int>> finalSymbolIndices = [];
-  
+
   bool isSpinning = false;
-  
-  // Constants for animation
   final double symbolHeight = 60.0;
-  final int symbolsPerReel = 20; // Virtual strip length
-  
+  final int symbolsPerReel = 20;
+
   @override
   void initState() {
     super.initState();
@@ -43,7 +34,6 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
   }
   
   void _initializeReels() {
-    // Create longer virtual strips for each reel with repeated symbols
     reelStrips = List.generate(reelCount, (_) {
       List<String> strip = [];
       for (int i = 0; i < symbolsPerReel; i++) {
@@ -51,71 +41,53 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
       }
       return strip;
     });
-    
-    // Initialize scroll controllers for each reel
+
     scrollControllers = List.generate(
       reelCount,
-      (_) => ScrollController(initialScrollOffset: (symbolsPerReel - 3) * symbolHeight)
+      (_) => ScrollController(initialScrollOffset: (symbolsPerReel - 3) * symbolHeight),
     );
-    
-    // Initialize animation controllers with staggered durations
+
     animControllers = List.generate(reelCount, (index) => 
       AnimationController(
         vsync: this,
-        duration: Duration(milliseconds: 2000 + (500 * index)), // Staggered durations
+        duration: Duration(milliseconds: 2000 + (500 * index)), 
       )
     );
-    
-    // Set up curved animations for a realistic slot machine effect
-    animations = animControllers.map((controller) => 
-      CurvedAnimation(
-        parent: controller,
-        curve: Curves.easeInOutBack,
-      )
-    ).toList();
-    
-    // Generate initial landing positions
+
     finalSymbolIndices = List.generate(
       reelCount, 
-      (_) => List.generate(3, (_) => Random().nextInt(symbols.length))
+      (_) => List.generate(3, (_) => Random().nextInt(symbols.length)),
     );
   }
-  
+
   void _spin() {
-    // Use global points instead of a local credits variable.
     if (points < 10 || isSpinning) return;
 
-    print(points);
-    
     setState(() {
-      points -= 10; // Deduct spin cost from global points
+      points -= 10;
       isSpinning = true;
     });
-    
-    // Determine the final symbols for each reel
+
     List<List<int>> newFinalIndices = List.generate(
       reelCount, 
-      (_) => List.generate(3, (_) => Random().nextInt(symbols.length))
+      (_) => List.generate(3, (_) => Random().nextInt(symbols.length)),
     );
-    
-    // Update the reel strips to ensure our final symbols will be visible
+
     for (int i = 0; i < reelCount; i++) {
       for (int j = 0; j < 3; j++) {
         reelStrips[i][j] = symbols[newFinalIndices[i][j]];
       }
     }
-    
-    // Reset animations and scroll positions
+
     for (int i = 0; i < reelCount; i++) {
       animControllers[i].reset();
       scrollControllers[i].jumpTo((symbolsPerReel - 3) * symbolHeight);
     }
-    
-    // Start animations with staggered delays
+
     for (int i = 0; i < reelCount; i++) {
       final controller = animControllers[i];
       final scrollController = scrollControllers[i];
-      
+
       Future.delayed(Duration(milliseconds: i * 200), () {
         controller.forward().whenComplete(() {
           if (i == reelCount - 1) {
@@ -126,8 +98,7 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
             });
           }
         });
-        
-        // Update scroll position as the animation runs.
+
         controller.addListener(() {
           double maxScroll = (symbolsPerReel - 3) * symbolHeight;
           double scrollPosition = maxScroll * (1 - controller.value);
@@ -136,14 +107,13 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
       });
     }
   }
-  
+
   void _checkWin() {
-    // Get symbols at the payline (middle position)
     List<String> paylineSymbols = List.generate(
       reelCount, 
-      (i) => symbols[finalSymbolIndices[i][1]]
+      (i) => symbols[finalSymbolIndices[i][1]],
     );
-    
+
     if (paylineSymbols.every((symbol) => symbol == paylineSymbols[0])) {
       int winAmount = _getSymbolValue(paylineSymbols[0]) * 10;
       _awardWin(winAmount);
@@ -154,24 +124,12 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
     } else if (paylineSymbols.where((symbol) => symbol == '💎').length >= 2) {
       _awardWin(30);
       _showWinDialog("Nice! Two or more diamonds!", 30);
-    } else {
-      bool hasPair = false;
-      for (int i = 0; i < paylineSymbols.length - 1; i++) {
-        for (int j = i + 1; j < paylineSymbols.length; j++) {
-          if (paylineSymbols[i] == paylineSymbols[j]) {
-            hasPair = true;
-            break;
-          }
-        }
-      }
-      
-      if (hasPair) {
-        _awardWin(15);
-        _showWinDialog("You got a pair!", 15);
-      }
+    } else if (paylineSymbols.toSet().length < paylineSymbols.length) {
+      _awardWin(15);
+      _showWinDialog("You got a pair!", 15);
     }
   }
-  
+
   int _getSymbolValue(String symbol) {
     switch (symbol) {
       case '7️⃣': return 7;
@@ -184,14 +142,14 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
       default: return 1;
     }
   }
-  
+
   void _awardWin(int amount) {
     setState(() {
-      points += amount; // Add win amount to global points
+      points += amount;
     });
     widget.onWin(amount);
   }
-  
+
   void _showWinDialog(String message, int amount) {
     showDialog(
       context: context,
@@ -204,7 +162,7 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
             children: [
               Text(message, style: TextStyle(color: Colors.white)),
               SizedBox(height: 10),
-              Text("$amount credits", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text("$amount points", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
             ],
           ),
           actions: [
@@ -219,7 +177,7 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
       },
     );
   }
-  
+
   @override
   void dispose() {
     for (var controller in animControllers) {
@@ -231,63 +189,6 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      color: Color(0xFF2c2c2e),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(height: 30),
-          // Slot machine body
-          Container(
-            height: 200,
-            width: 300,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Color(0xFF50c878), width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black54,
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                )
-              ],
-            ),
-            padding: EdgeInsets.all(10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(reelCount, (reelIndex) {
-                return _buildReel(reelIndex);
-              }),
-            ),
-          ),
-          SizedBox(height: 30),
-          // Spin button
-          ElevatedButton(
-            onPressed: isSpinning ? null : _spin,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF50c878),
-              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-              disabledBackgroundColor: Colors.grey,
-              elevation: 5,
-            ),
-            child: Text(
-              isSpinning ? "SPINNING..." : "SPIN (10 POINTS)",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-          ),
-          SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-  
   Widget _buildReel(int reelIndex) {
     return Container(
       width: 80,
@@ -314,59 +215,60 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
                 );
               },
             ),
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Column(
-                  children: [
-                    Expanded(child: Container(color: Colors.black.withOpacity(0.5))),
-                    Container(
-                      height: symbolHeight,
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border(
-                          top: BorderSide(color: Color(0xFF50c878), width: 1),
-                          bottom: BorderSide(color: Color(0xFF50c878), width: 1),
-                        ),
-                      ),
-                    ),
-                    Expanded(child: Container(color: Colors.black.withOpacity(0.5))),
-                  ],
-                ),
-              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Text(
+            "Your Points: $points",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
             ),
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 10,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.black, Colors.transparent],
-                  ),
-                ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        Stack(
+          children: [
+            Container(
+              height: 200,
+              width: 300,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Color(0xFF50c878), width: 3),
+                boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 10, spreadRadius: 2)],
               ),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 10,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [Colors.black, Colors.transparent],
-                  ),
-                ),
+              padding: EdgeInsets.all(10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(reelCount, (reelIndex) {
+                  return _buildReel(reelIndex);
+                }),
               ),
             ),
           ],
         ),
-      ),
+        SizedBox(height: 30),
+        ElevatedButton(
+          onPressed: isSpinning ? null : _spin,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF50c878),
+            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+          ),
+          child: Text("SPIN (10 POINTS)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+        ),
+      ],
     );
   }
 }

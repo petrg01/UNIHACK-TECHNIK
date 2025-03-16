@@ -10,7 +10,7 @@ class PrizeDrawScreen extends StatefulWidget {
 
 class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
   int totalWinnings = 0;
-  
+
   void _handleWin(int amount) {
     setState(() {
       totalWinnings += amount;
@@ -75,87 +75,74 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
       ),
     );
   }
-  
- @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: Color(0xFF2c2c2e),
-    body: SafeArea(
-      child: Column(
-        children: [
-          HeaderWidget(userName: userName),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                    child: Text(
-                      "Use your points to win prizes!",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                    child: Text(
-                      "${points}",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 32,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  SlotMachineWidget(
-                    onWin: _handleWin,
-                  ),
-                  SizedBox(height: 20),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFF2c2c2e),
+      body: SafeArea(
+        child: Column(
+          children: [
+            HeaderWidget(userName: userName),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                       child: Text(
-                        "Badges",
+                        "Use your points to win prizes!",
                         style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                          color: Colors.white70,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    SlotMachineWidget(
+                      onWin: _handleWin,
+                    ),
+                    SizedBox(height: 20),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Badges",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 12),
-                  Container(
-                    height: 160,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          buildBadge("First Place", "Have the highest score at the end of the month", 1.0),
-                          buildBadge("Consistent", "Log your expenses every day for a month", 0.67),
-                          buildBadge("Debt Demolisher", "Pay off your debts. Consistency is key", 0.34),
-                          buildBadge("Achiever", "Achieve your savings goals", 0.2),
-                          buildBadge("Gambler", "Spin the slots 1000 times", 0.1),
-                        ],
+                    SizedBox(height: 12),
+                    Container(
+                      height: 160,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            buildBadge("First Place", "Have the highest score at the end of the month", 1.0),
+                            buildBadge("Consistent", "Log your expenses every day for a month", 0.67),
+                            buildBadge("Debt Demolisher", "Pay off your debts. Consistency is key", 0.34),
+                            buildBadge("Achiever", "Achieve your savings goals", 0.2),
+                            buildBadge("Gambler", "Spin the slots 1000 times", 0.1),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 20),
-                ],
+                    SizedBox(height: 20),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 }
