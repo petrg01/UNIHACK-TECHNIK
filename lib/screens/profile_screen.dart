@@ -12,6 +12,7 @@ import 'package:technik/data/notification_preferences_data.dart';
 import 'package:technik/widgets/subscription_list.dart';
 import 'package:technik/data/subscription_data.dart';
 import 'package:technik/widgets/add_goal_form.dart';
+import 'package:technik/widgets/add_friend_form.dart';
 import '../widgets/header_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -32,12 +33,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _goals = GoalsData.getSampleGoals();
     // Load profile image if available
     _loadProfileImage();
+    // Load friends data
+    _loadFriendsData();
   }
   
   // Load profile image from shared preferences
   Future<void> _loadProfileImage() async {
     await loadProfileImage();
     // Update UI if image path is loaded
+    if (mounted) {
+      setState(() {});
+    }
+  }
+  
+  // Load friends data from shared preferences
+  Future<void> _loadFriendsData() async {
+    await loadFriends();
+    // Update UI if needed
     if (mounted) {
       setState(() {});
     }
@@ -454,9 +466,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _showAddFriendForm(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Color(0xFF3c3c3e),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          // Add extra padding when keyboard appears
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: SingleChildScrollView(
+          child: AddFriendForm(
+            onFriendAdded: (Friend newFriend) async {
+              // Add the new friend to global list
+              await addFriend(newFriend);
+              
+              // Close the form
+              Navigator.pop(context);
+              
+              // Show success message
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Friend @${newFriend.name} added successfully!"),
+                  backgroundColor: Color(0xFF4CD964),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              
+              // Update UI
+              setState(() {});
+              
+              // Show the updated friends list
+              _showFriendsPopup(context);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showFriendsPopup(BuildContext context) {
-    // Get sample friends data
-    final friends = FriendsData.getSampleFriends();
+    // Use the global friends list instead of sample data
+    final friends = userFriends;
 
     // Show the custom popup with friends list
     CustomPopup.show(
@@ -471,7 +529,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Show a snackbar to demonstrate the action
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Selected friend: ${friend.name}"),
+              content: Text("Selected username: @${friend.name}"),
               backgroundColor: Color(0xFF4CD964), // Green color
               behavior: SnackBarBehavior.floating,
             ),
@@ -482,14 +540,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         TextButton(
           onPressed: () {
             Navigator.of(context).pop();
-            // Here you could navigate to a 'Add Friend' screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Add friend feature coming soon!"),
-                backgroundColor: Color(0xFF4CD964), // Green color
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            // Show the Add Friend form
+            _showAddFriendForm(context);
           },
           child: Text(
             "Add Friend",

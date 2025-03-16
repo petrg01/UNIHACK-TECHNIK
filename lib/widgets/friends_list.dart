@@ -55,7 +55,7 @@ class FriendsList extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Avatar
+            // Avatar with @ symbol to indicate username
             Container(
               width: 50,
               height: 50,
@@ -63,52 +63,27 @@ class FriendsList extends StatelessWidget {
                 color: Colors.grey[800],
                 shape: BoxShape.circle,
               ),
-              child: friend.avatarUrl != null && friend.avatarUrl!.isNotEmpty
-                  ? ClipOval(
-                      child: Image.network(
-                        friend.avatarUrl!,
-                        fit: BoxFit.cover,
-                        width: 50,
-                        height: 50,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.person,
-                          color: Colors.white70,
-                          size: 30,
-                        ),
-                      ),
-                    )
-                  : Icon(
-                      Icons.person,
-                      color: Colors.white70,
-                      size: 30,
-                    ),
+              child: Center(
+                child: Text(
+                  "@",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
             SizedBox(width: 16),
-            // Name and status
+            // Username
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    friend.name,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  if (friend.status != null && friend.status!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        friend.status!,
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                ],
+              child: Text(
+                friend.name,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             // Chevron icon
