@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:technik/globals.dart';
 import 'package:technik/widgets/custom_popup.dart';
 import 'package:technik/widgets/friends_list.dart';
@@ -20,12 +22,54 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   // List of goals that can be updated when a new goal is added
   List<Goal> _goals = [];
+  // Instance of ImagePicker to pick images from gallery
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
     // Initialize with sample goals
     _goals = GoalsData.getSampleGoals();
+    // Load profile image if available
+    _loadProfileImage();
+  }
+  
+  // Load profile image from shared preferences
+  Future<void> _loadProfileImage() async {
+    await loadProfileImage();
+    // Update UI if image path is loaded
+    if (mounted) {
+      setState(() {});
+    }
+  }
+  
+  // Function to pick image from gallery
+  Future<void> _pickImage() async {
+    try {
+      final XFile? pickedImage = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        imageQuality: 85,
+      );
+      
+      if (pickedImage != null) {
+        setState(() {
+          profileImagePath = pickedImage.path;
+        });
+        // Save the profile image path
+        await saveProfileImage();
+      }
+    } catch (e) {
+      // Show error message if image picking fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to pick image: $e"),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
   
   //final String userName = "John Johnson";
@@ -42,26 +86,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
               //HeaderWidget(userName: userName),
               SizedBox(height: 60),
               // Profile Picture
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Color(0xFF3c3c3e),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: ClipOval(
-                    child: Container(
-                      width: 90,
-                      height: 90,
-                      color: Colors.pink[50],
-                      child: Icon(
-                        Icons.person,
-                        size: 60,
-                        color: Colors.black54,
+              GestureDetector(
+                onTap: _pickImage,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF3c3c3e),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: ClipOval(
+                          child: Container(
+                            width: 90,
+                            height: 90,
+                            color: profileImagePath == null ? Colors.pink[50] : null,
+                            child: profileImagePath == null
+                                ? Icon(
+                                    Icons.person,
+                                    size: 60,
+                                    color: Colors.black54,
+                                  )
+                                : Image.file(
+                                    File(profileImagePath!),
+                                    fit: BoxFit.cover,
+                                    width: 90,
+                                    height: 90,
+                                  ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF4CD964),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.camera_alt,
+                          color: Colors.black,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               SizedBox(height: 20),
