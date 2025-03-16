@@ -310,34 +310,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         TextButton(
           onPressed: () {
             Navigator.of(context).pop();
-            // Show a message that subscriptions settings are saved
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Subscription preferences saved"),
-                backgroundColor: Color(0xFF4CD964),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
           },
           child: Text(
-            "Save",
-            style: TextStyle(color: Color(0xFF4CD964)),
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-            // Here you could navigate to a 'Add Subscription' screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Add subscription feature coming soon!"),
-                backgroundColor: Color(0xFF4CD964),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          },
-          child: Text(
-            "Add New",
+            "Close",
             style: TextStyle(color: Color(0xFF4CD964)),
           ),
         ),
