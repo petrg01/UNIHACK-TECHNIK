@@ -28,11 +28,11 @@ class GoalsList extends StatelessWidget {
   final Function(Goal)? onGoalRemoved;
 
   const GoalsList({
-    Key? key,
+    super.key,
     required this.goals,
     this.onGoalTap,
     this.onGoalRemoved,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
