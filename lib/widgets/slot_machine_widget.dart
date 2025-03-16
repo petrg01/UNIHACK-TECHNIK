@@ -279,7 +279,7 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
               elevation: 5,
             ),
             child: Text(
-              isSpinning ? "SPINNING..." : "SPIN (10 CREDITS)",
+              isSpinning ? "SPINNING..." : "SPIN (10 POINTS)",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),
