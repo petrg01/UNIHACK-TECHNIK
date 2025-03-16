@@ -43,7 +43,6 @@ dependencies:
   fl_chart: ^0.70.2
   smooth_page_indicator: ^1.2.1
   shared_preferences: ^2.5.2
-  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:
