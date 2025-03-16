@@ -239,7 +239,6 @@ class _SlotMachineWidgetState extends State<SlotMachineWidget> with TickerProvid
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          HeaderWidget(userName: userName),
           SizedBox(height: 30),
           // Slot machine body
           Container(

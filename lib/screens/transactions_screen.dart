@@ -10,6 +10,8 @@ import 'package:intl/intl.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
 class TransactionsScreen extends StatefulWidget {
+  const TransactionsScreen({super.key});
+
   @override
   _TransactionsScreenState createState() => _TransactionsScreenState();
 }
@@ -509,8 +511,8 @@ void _showEditDialog(BuildContext context, Transaction tx, VoidCallback onTransa
                   });
     
                   Navigator.pop(context);
-                  await _loadTransactions();  // <-- Explicitly reload transactions here
-                  onTransactionUpdated();     // <-- callback
+                  await _loadTransactions();  
+                  onTransactionUpdated();    
                 },
               ),
             ],
