@@ -20,7 +20,25 @@ class AddTransactionDialog extends StatefulWidget {
 class _AddTransactionDialogState extends State<AddTransactionDialog> {
   final TextEditingController descController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
+  final TextEditingController customCategoryController = TextEditingController();
   DateTime selectedDateTime = DateTime.now();
+
+  // New state variables for the dropdown fields.
+  String? selectedOperation = "Withdrawal"; // Default value.
+  String? selectedCategory;
+
+  // Dynamic Category Lists
+  final List<String> withdrawalCategories = [
+    "Food", "Transport", "Entertainment", "Bills", "Personal Care", 
+    "Healthcare", "Education", "Debt Payments", "Shopping", "Travel", 
+    "Gifts & Holidays", "Charity & Donations", "Other"
+  ];
+
+  final List<String> depositCategories = [
+    "Salary", "Investment", "Gift", "Other"
+  ];
+
+  final List<String> operationOptions = ["Withdrawal", "Deposit"];
 
   Future<void> _showDatePicker() async {
     DateTime? pickedDate = await showDatePicker(
@@ -87,10 +105,10 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     );
   }
 
+  // Build picker field without internal margin.
   Widget _buildPickerField(String label, String value, IconData icon) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Color(0xFF2c2c2e),
         borderRadius: BorderRadius.circular(10),
@@ -121,11 +139,48 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     );
   }
 
+  // Build a full-width dropdown.
+  Widget _buildDropdownField(String label, String? selectedValue, List<String> items, ValueChanged<String?> onChanged) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      decoration: BoxDecoration(
+        color: Color(0xFF2c2c2e),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isExpanded: true,
+          value: selectedValue,
+          hint: Text(label, style: TextStyle(color: Colors.white, fontSize: 16)),
+          icon: Icon(Icons.arrow_drop_down, color: Colors.white54),
+          dropdownColor: Color(0xFF2c2c2e),
+          items: items.map((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value, style: TextStyle(color: Colors.white, fontSize: 16)),
+            );
+          }).toList(),
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+
   Widget _buildDialogButton(String text, Color color, VoidCallback onPressed) {
     return TextButton(
       onPressed: onPressed,
       child: Text(text, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
     );
+  }
+
+  @override
+  void dispose() {
+    descController.dispose();
+    amountController.dispose();
+    customCategoryController.dispose();
+    super.dispose();
   }
 
   @override
@@ -146,11 +201,36 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                 onTap: _showDatePicker,
                 child: _buildPickerField("Date", DateFormat('yyyy-MM-dd').format(selectedDateTime), Icons.calendar_today),
               ),
+              SizedBox(height: 10),
               GestureDetector(
                 onTap: _showTimePicker,
                 child: _buildPickerField("Time", DateFormat('HH:mm').format(selectedDateTime), Icons.access_time),
               ),
+              SizedBox(height: 10),
+              _buildDropdownField("Operation Type", selectedOperation, operationOptions, (newValue) {
+                setState(() {
+                  selectedOperation = newValue;
+                  selectedCategory = null; // Reset category when operation changes
+                });
+              }),
+              SizedBox(height: 10),
+              _buildDropdownField(
+                "Category",
+                selectedCategory,
+                selectedOperation == "Withdrawal" ? withdrawalCategories : depositCategories,
+                (newValue) {
+                  setState(() {
+                    selectedCategory = newValue;
+                  });
+                },
+              ),
+              if (selectedCategory == "Other") ...[
+                SizedBox(height: 10),
+                _buildTextField(customCategoryController, "Custom Category"),
+              ],
+              SizedBox(height: 10),
               _buildTextField(descController, "Description"),
+              SizedBox(height: 10),
               _buildTextField(amountController, "Amount", isNumeric: true),
             ],
           ),
@@ -158,36 +238,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
       ),
       actions: [
         _buildDialogButton("Cancel", Colors.white70, () => Navigator.of(context).pop()),
-        _buildDialogButton("Save", Color(0xFF4CD964), () async {
-          double? amount = double.tryParse(amountController.text);
-          if (amount == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Invalid amount!"),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-            return;
-          }
-
-          final newTx = Transaction(
-            date: DateFormat('yyyy-MM-dd HH:mm:ss').format(selectedDateTime),
-            description: descController.text,
-            amount: amount,
-          );
-
-          await TransactionDB.insertTransaction(newTx.toMap());
-          Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Transaction Added!"),
-              backgroundColor: Color(0xFF4CD964),
-              behavior: SnackBarBehavior.floating,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }),
+        _buildDialogButton("Save", Color(0xFF4CD964), () {}),
       ],
     );
   }

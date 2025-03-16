@@ -13,10 +13,8 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
     setState(() {
       totalWinnings += amount;
     });
-    // Additional code to handle wins if needed
   }
 
-  // Helper function to determine the progress bar color based on progress.
   Color _getProgressColor(double progress) {
     if (progress < 0.33) {
       return Colors.red;
@@ -27,7 +25,6 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
     }
   }
 
-  // Helper function to build a badge item with a progress bar placed above the badge icon.
   Widget buildBadge(String name, String description, double progress) {
     return Container(
       width: 120,
@@ -35,7 +32,6 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Progress bar moved above the icon.
           Container(
             height: 8,
             width: double.infinity,
@@ -49,7 +45,6 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
             ),
           ),
           SizedBox(height: 8),
-          // Placeholder icon for the badge.
           Icon(
             Icons.emoji_events,
             size: 50,
@@ -82,18 +77,31 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Use a Scaffold to fill the entire screen.
       backgroundColor: Color(0xFF2c2c2e),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Slot Machine Widget at the top.
+              // Text appears first now
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                child: Text(
+                  "Use your points to win prizes!",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              
+              // Slot Machine Widget is now below the text
               SlotMachineWidget(
                 onWin: _handleWin,
               ),
+
               SizedBox(height: 20),
-              // "Badges" section title.
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Align(
@@ -109,7 +117,6 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
                 ),
               ),
               SizedBox(height: 12),
-              // Horizontal scrollable widget for badges.
               Container(
                 height: 160,
                 child: SingleChildScrollView(
@@ -127,7 +134,6 @@ class _PrizeDrawScreenState extends State<PrizeDrawScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              // Additional content if needed.
             ],
           ),
         ),
