@@ -15,11 +15,13 @@ class Friend {
 class FriendsList extends StatelessWidget {
   final List<Friend> friends;
   final Function(Friend)? onFriendTap;
+  final Function(Friend)? onFriendRemoved;
 
   const FriendsList({
     Key? key,
     required this.friends,
     this.onFriendTap,
+    this.onFriendRemoved,
   }) : super(key: key);
 
   @override
@@ -38,7 +40,86 @@ class FriendsList extends StatelessWidget {
     }
 
     return Column(
-      children: friends.map((friend) => _buildFriendItem(friend, context)).toList(),
+      children: friends.map((friend) => _buildDismissibleFriendItem(friend, context)).toList(),
+    );
+  }
+
+  Widget _buildDismissibleFriendItem(Friend friend, BuildContext context) {
+    return Dismissible(
+      key: Key(friend.name), // Unique key for each item
+      background: _buildDismissibleBackground(),
+      direction: DismissDirection.endToStart, // Only allow right to left swipe
+      confirmDismiss: (direction) async {
+        // Show confirmation dialog
+        return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Color(0xFF3c3c3e),
+              title: Text(
+                "Remove Friend",
+                style: TextStyle(color: Colors.white),
+              ),
+              content: Text(
+                "Are you sure you want to remove @${friend.name} from your friends list?",
+                style: TextStyle(color: Colors.white70),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(false),
+                ),
+                TextButton(
+                  child: Text(
+                    "Remove",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(true),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      onDismissed: (direction) {
+        // Call the callback to remove the friend
+        if (onFriendRemoved != null) {
+          onFriendRemoved!(friend);
+        }
+      },
+      child: _buildFriendItem(friend, context),
+    );
+  }
+
+  // Background widget shown when swiping the item
+  Widget _buildDismissibleBackground() {
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: EdgeInsets.only(right: 20.0),
+      decoration: BoxDecoration(
+        color: Colors.red,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Text(
+            "Remove",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(width: 8),
+          Icon(
+            Icons.delete,
+            color: Colors.white,
+          ),
+        ],
+      ),
     );
   }
 

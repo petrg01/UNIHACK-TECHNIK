@@ -535,6 +535,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
         },
+        onFriendRemoved: (friend) async {
+          // Remove the friend from the global list
+          await removeFriend(friend);
+          
+          // Update UI
+          setState(() {});
+          
+          // Show a snackbar to confirm removal
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("@${friend.name} removed from your friends list"),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(
+                label: 'UNDO',
+                textColor: Colors.white,
+                onPressed: () async {
+                  // Add the friend back if user taps undo
+                  await addFriend(friend);
+                  
+                  // Update UI
+                  setState(() {});
+                  
+                  // Show the friends list with the restored friend
+                  _showFriendsPopup(context);
+                  
+                  // Show confirmation
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("@${friend.name} added back to your friends list"),
+                      backgroundColor: Color(0xFF4CD964),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        },
       ),
       actions: [
         TextButton(

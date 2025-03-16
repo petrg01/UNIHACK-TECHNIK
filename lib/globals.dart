@@ -72,3 +72,9 @@ Future<void> addFriend(Friend newFriend) async {
   userFriends.add(newFriend);
   await saveFriends();
 }
+
+// Remove a friend and save to SharedPreferences
+Future<void> removeFriend(Friend friend) async {
+  userFriends.removeWhere((f) => f.name == friend.name);
+  await saveFriends();
+}
